@@ -1,0 +1,20 @@
+{
+  "name": "transend",
+  "private": true,
+  "type": "module",
+  "description": "Transend MVP: repo-level scripts (deploy, seed, AML flags). The app lives in web/.",
+  "scripts": {
+    "deploy:testnet": "tsx scripts/deploy-testnet.ts",
+    "seed:demo": "tsx scripts/seed-demo.ts",
+    "aml:flags": "tsx scripts/aml-flags.ts"
+  },
+  "dependencies": {
+    "@stellar/stellar-sdk": "^17.4.0",
+    "dotenv": "^18.0.10"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
