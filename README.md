@@ -28,28 +28,3 @@ cd web && npm install && npm run dev
 Open http://localhost:3000. Sender app `/app`, shop app `/shop`, judges' page `/proof`, admin `/admin/cards` (set `ADMIN_PASSWORD` to protect it; it is closed in production without one).
 
 Demo card `TS4F2K9Q`: normal PIN `1234`, duress PIN `4321`. Open the sender app, go to the card, and use "Download card" to see its codes. The sender and shop apps do not talk to each other yet; both run on in-browser fake data until the API is wired up (milestone 3).
-
-## Setup
-
-Requires Rust (with the `wasm32v1-none` target), the Stellar CLI, and Node 20+.
-
-```bash
-cargo test -p transend_escrow      # contract unit tests
-stellar contract build             # builds the wasm
-cp .env.example .env
-npm install
-npm run deploy:testnet             # issues demo USDC, deploys the escrow, writes IDs to .env
-```
-
-`deploy-testnet.ts` creates testnet-only keys and funds them with Friendbot. Secrets go to `.env` only (gitignored).
-
-## Contract notes
-
-- One contract, `transend_escrow`, holds every card's USDC. It pays a shop only when a valid unused code arrives with the verification service's signature.
-- Code hash: `sha256(card_id ascii || line as u32 big-endian || code ascii)`. The renewal code is line 20.
-- `freeze(card_id, caller)` takes the caller explicitly (verifier or the card's sender) so either can sign; the PRD listed only `card_id`.
-- PINs, the duress PIN and area risk levels live off-chain. The contract enforces the hard caps.
-
-## What is mocked
-
-Sender KYC, sanctions screening, CAD to USDC on-ramp, the licensed Haitian payout partner, SMS. See the PRD scope table.
