@@ -6,7 +6,7 @@ import { RotateCcw, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { StatusLine } from "@/components/ui/StatusLine";
-import { getLastResult } from "@/lib/demo/shop-engine";
+import { getLastResult } from "@/lib/client/shop";
 import { s } from "@/strings/shop.en";
 
 export default function DeclinedPage() {
