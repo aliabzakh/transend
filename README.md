@@ -17,7 +17,7 @@ Remittance from Canada to Haiti for recipients with no bank account and no smart
 | 2. App shell and screens | Core done (auth, database, view-models). Draft A restyle (UI track) not started |
 | 3. Wire API to contract | Done: every screen runs on the real API and the testnet contract |
 | 3b. Trained forecast | Done, on synthetic sample data |
-| 4. End-to-end demo | Done locally against testnet. Live URL waits on the Vercel environment variables |
+| 4. End-to-end demo | Done: works locally and on the live URL against testnet |
 | 5. Polish (Playwright, technical doc, printed cards, Slow 3G) | Not started |
 
 Plan, acceptance results and deviations: [docs/plan.md](docs/plan.md). Product spec: [docs/prd.md](docs/prd.md) (v2).

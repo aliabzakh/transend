@@ -14,7 +14,7 @@ Two tracks build in parallel (see the PRD's "How to read this document"): **Core
 | 2 | App shell and screens | UI + Core | Core done (auth, database, view-models). UI track (Draft A restyle, U1 to U8) not started |
 | 3 | Wire API to contract | Core | Done |
 | 3b | Trained forecast | Core | Done (on synthetic data) |
-| 4 | End-to-end demo works | Both | Done locally against testnet; live URL waits on the Vercel environment variables |
+| 4 | End-to-end demo works | Both | Done, locally and on https://transend.vercel.app (Neon database) |
 | 5 | Polish, README, cards | Both | Not started (Playwright test, `docs/technical.md`, printed cards, Slow 3G check, UI pass) |
 | 6 | Stretch | Core | Not started |
 
@@ -63,7 +63,7 @@ All Stellar calls sit behind `web/lib/stellar/`; apps never build transactions.
 
 Result on held-out days (last 14 per shop, synthetic): model MAE US$21.31 vs rules US$58.03 (63% better), so the model is used when `FORECAST_MODEL_MODE=model`.
 
-## Milestone 4: end to end (done locally)
+## Milestone 4: end to end (done)
 
 Run on the local app against testnet on Nov 13, 2026. Every criterion below passed in the browser or against the API, except where noted.
 
@@ -88,7 +88,20 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 | 17 | Draft A UI | Not started (UI track) |
 | 18 | Playwright test | Not started (milestone 5) |
 
-**Live URL:** waits on the production environment variables in Vercel (see README, "Deploy").
+**Live URL (checked Nov 13, 2026 after merging PR #2):** https://transend.vercel.app runs on Neon and the same testnet contract. Passed there through the API and `/proof`:
+
+- Sender and shop log-in.
+- Shop cash ceiling from the model (S-101: C$288, "Saturday market").
+- Balance by PIN.
+- Used-line and third-withdrawal declines.
+- US$10 redeem in 5.8 s.
+- C$99 refused and C$100 quote (C$1.49 fee, US$68.18, 3.69% all-in), then sent in 5 s.
+- Set-aside floor refusal; US$20 set aside (the shop saw only the available part), then moved back.
+- Admin pages behind the password.
+- Nightly cron (3 shops recomputed).
+- `/proof` listing the live events with explorer links.
+
+The browser screens were not clicked through on the live URL; they were on the local build.
 
 ## Deviations from the PRD (decided while building)
 
@@ -101,7 +114,7 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 
 ## Next (milestone 5, then 6)
 
-1. Vercel production environment variables, then verify every criterion on the live URL.
+1. Click through the screens on the live URL (sender, shop, admin) at 360 px.
 2. Playwright end-to-end test, including one set-aside and move-back.
 3. `docs/technical.md`, `docs/architecture.png`, README polish.
 4. 15 printed demo cards (`npm run seed:demo -- --cards 15` or `/admin/cards`).
