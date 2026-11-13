@@ -16,3 +16,4 @@ test_snapshots
 
 # Demo card codes from seed-demo.ts: never commit
 demo-cards/
+scripts/ml/.venv/
