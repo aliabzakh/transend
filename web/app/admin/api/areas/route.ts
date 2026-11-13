@@ -1,5 +1,6 @@
 import { asc } from "drizzle-orm";
-import { ok, route } from "@/lib/server/http";
+import { body, ok, route } from "@/lib/server/http";
+import { setAreaStatus, type AreaStatus } from "@/lib/server/shops";
 import { requireAdmin } from "@/lib/server/session";
 import { db, schema } from "@/db";
 
@@ -21,4 +22,12 @@ export const GET = route(async (req) => {
     communes: communes.map((c) => ({ id: c.id, name: c.name, department: c.department, status: c.status })),
     shops,
   });
+});
+
+/** Admin override of an area's risk level: { communeId, status }. */
+export const POST = route(async (req) => {
+  requireAdmin(req);
+  const { communeId, status } = await body<{ communeId: string; status: AreaStatus }>(req);
+  const row = await setAreaStatus(communeId, status);
+  return ok({ area: { id: row.id, status: row.status } });
 });
