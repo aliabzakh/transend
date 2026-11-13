@@ -98,7 +98,7 @@ export async function invoke(
       return await send(feeBump(prepared));
     } catch (e) {
       // Two calls from one account at once can collide on the sequence number: retry once.
-      if (attempt === 0 && e instanceof ChainError && /txBadSeq|tx_bad_seq/i.test(e.message)) continue;
+      if (attempt < 2 && e instanceof ChainError && /txBadSeq/i.test(e.message)) continue;
       throw e;
     }
   }
@@ -125,14 +125,21 @@ export async function classic(
   ops: xdr.Operation[],
   extraSigners: Keypair[] = [],
 ): Promise<Submitted> {
-  const account = await server().getAccount(source.publicKey());
-  let b = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: env.passphrase }).setTimeout(60);
-  for (const op of ops) b = b.addOperation(op);
-  const tx = b.build();
-  tx.sign(source, ...extraSigners);
-  // The sponsor is the source of account-creation transactions and pays its own fee.
-  if (source.publicKey() === sponsor().publicKey()) return send(tx);
-  return send(feeBump(tx));
+  for (let attempt = 0; ; attempt++) {
+    const account = await server().getAccount(source.publicKey());
+    let b = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase: env.passphrase }).setTimeout(60);
+    for (const op of ops) b = b.addOperation(op);
+    const tx = b.build();
+    tx.sign(source, ...extraSigners);
+    try {
+      // The sponsor is the source of account-creation transactions and pays its own fee.
+      if (source.publicKey() === sponsor().publicKey()) return await send(tx);
+      return await send(feeBump(tx));
+    } catch (e) {
+      if (attempt < 2 && e instanceof ChainError && /txBadSeq/i.test(e.message)) continue;
+      throw e;
+    }
+  }
 }
 
 export { Operation };
