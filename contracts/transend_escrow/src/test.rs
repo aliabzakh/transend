@@ -36,7 +36,7 @@ fn limits() -> Limits {
 
 /// The code printed on line `i` of a card: 12 Crockford base32 characters.
 fn code(env: &Env, card: &str, i: u32) -> Bytes {
-    Bytes::from_slice(env, std::format!("{}X{:03}ZZZZZZ", &card[2..4], i).as_bytes()[..12])
+    Bytes::from_slice(env, &std::format!("{}X{:03}ZZZZZZ", &card[2..4], i).as_bytes()[..12])
 }
 
 /// Independent re-implementation of the hash with plain byte arrays,
