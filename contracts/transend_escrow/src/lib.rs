@@ -2,8 +2,8 @@
 //! Transend escrow: holds every card's USDC and pays a shop only when a valid,
 //! unused one-time code arrives with the verification service's signature.
 //!
-//! Off-chain (not here): PINs, duress PIN, area risk levels, the lower "tense"
-//! withdrawal limit. The contract enforces the hard caps only.
+//! Off-chain (not here): the PIN, area risk levels, the lower "tense"
+//! withdrawal limit and shop cash ceilings. The contract enforces the hard caps only.
 
 mod types;
 
@@ -45,7 +45,7 @@ pub enum Error {
 }
 
 // Events. Topics are the event name plus card_id. `Freeze` carries no reason,
-// so a duress freeze is indistinguishable from any other freeze on the ledger.
+// so the public ledger never shows why a card was frozen.
 #[contractevent]
 pub struct Issue {
     #[topic]
@@ -288,8 +288,8 @@ impl TransendEscrow {
         Ok(())
     }
 
-    /// `caller` must be the verifier (duress PIN, five wrong PINs) or the
-    /// card's sender (lost card), and must sign.
+    /// `caller` must be the verifier (five wrong PINs) or the card's sender
+    /// (lost card, or the sender's choice), and must sign.
     pub fn freeze(env: Env, card_id: Symbol, caller: Address) -> Result<(), Error> {
         let mut card = Self::load(&env, &card_id)?;
         if caller != card.sender && caller != Self::verifier(&env) {
