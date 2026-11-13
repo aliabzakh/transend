@@ -5,8 +5,11 @@
   "description": "Transend MVP: repo-level scripts (deploy, seed, AML flags). The app lives in web/.",
   "scripts": {
     "deploy:testnet": "tsx scripts/deploy-testnet.ts",
-    "seed:demo": "tsx scripts/seed-demo.ts",
-    "aml:flags": "tsx scripts/aml-flags.ts"
+    "seed:demo": "cd web && tsx --tsconfig tsconfig.json ../scripts/seed-demo.ts",
+    "aml:flags": "tsx scripts/aml-flags.ts",
+    "ml:export": "cd web && tsx --tsconfig tsconfig.json ../scripts/ml/export-samples.ts",
+    "ml:train": "scripts/ml/.venv/bin/python scripts/ml/train_forecast.py",
+    "ml:setup": "python3 -m venv scripts/ml/.venv && scripts/ml/.venv/bin/pip install -q -r scripts/ml/requirements.txt"
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^17.4.0",

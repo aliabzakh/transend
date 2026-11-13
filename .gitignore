@@ -13,3 +13,9 @@ node_modules
 .next
 .vercel
 test_snapshots
+
+# Demo card codes from seed-demo.ts: never commit
+demo-cards/
+scripts/ml/.venv/
+# Production env for Vercel (import in the dashboard): never commit
+vercel.env

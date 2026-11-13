@@ -34,31 +34,39 @@ const decode = (b64: string): string => {
   }
 };
 
+/** The oldest ledger the RPC still holds (getEvents refuses anything earlier). */
+async function oldest(contractId: string): Promise<number | null> {
+  try {
+    const { sequence } = await rpc<{ sequence: number }>("getLatestLedger");
+    const probe = await rpc<{ oldestLedger: number }>("getEvents", {
+      startLedger: Math.max(1, sequence - 10),
+      filters: [{ type: "contract", contractIds: [contractId] }],
+      pagination: { limit: 1 },
+    });
+    return probe.oldestLedger;
+  } catch {
+    return null;
+  }
+}
+
 /** Newest `limit` events for one contract, read straight from Soroban RPC. Read-only. */
 export async function fetchRecentEvents(
   contractId: string,
   limit: number,
 ): Promise<{ events: ContractEvent[]; error?: string }> {
   try {
-    const { sequence } = await rpc<{ sequence: number }>("getLatestLedger");
-    // Public RPC keeps about a week of history; start inside that window.
-    let events: RawEvent[] = [];
-    let lastError = "";
-    for (const window of [100_000, 17_000, 1_000]) {
-      try {
-        const out = await rpc<{ events: RawEvent[] }>("getEvents", {
-          startLedger: Math.max(1, sequence - window),
-          filters: [{ type: "contract", contractIds: [contractId] }],
-          pagination: { limit: 200 },
-        });
-        events = out.events;
-        lastError = "";
-        break;
-      } catch (e) {
-        lastError = e instanceof Error ? e.message : String(e);
-      }
+    // Public RPC keeps about a week of history but scans only ~10,000 ledgers per
+    // call, returning a cursor. Page forward from the oldest retained ledger to now.
+    type Page = { events: RawEvent[]; cursor?: string; latestLedger: number; oldestLedger: number };
+    const filters = [{ type: "contract", contractIds: [contractId] }];
+    let page = await rpc<Page>("getEvents", { startLedger: (await oldest(contractId)) ?? 1, filters, pagination: { limit: 200 } });
+    const events: RawEvent[] = [...page.events];
+    for (let i = 0; i < 25 && page.cursor; i++) {
+      const at = Number(BigInt(page.cursor.split("-")[0]) >> 32n);
+      if (at >= page.latestLedger) break;
+      page = await rpc<Page>("getEvents", { filters, pagination: { cursor: page.cursor, limit: 200 } });
+      events.push(...page.events);
     }
-    if (lastError) return { events: [], error: lastError };
     const mapped = events
       // The USDC token also emits events for its own transfers; only show ones that carry a card ID.
       .filter((e) => e.topic.length >= 2)

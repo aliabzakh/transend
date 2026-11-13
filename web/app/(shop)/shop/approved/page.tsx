@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/Button";
 import { Amount } from "@/components/ui/Amount";
 import { Row, Rows } from "@/components/ui/Row";
 import { StatusLine } from "@/components/ui/StatusLine";
-import { getLastResult, setPending } from "@/lib/demo/shop-engine";
-import { explorerContractUrl } from "@/lib/config";
+import { getLastResult, setPending } from "@/lib/client/shop";
+import { explorerTxUrl } from "@/lib/config";
 import { s } from "@/strings/shop.en";
 
-/** The same screen for a normal approval and a duress approval. Nothing here can tell them apart. */
 export default function ApprovedPage() {
   const router = useRouter();
   const r = getLastResult();
@@ -50,7 +49,7 @@ export default function ApprovedPage() {
         />
       </Rows>
       <p>{s.approved.paidBack}</p>
-      <a className="nav-link" href={explorerContractUrl} target="_blank" rel="noreferrer">
+      <a className="nav-link" href={explorerTxUrl(r.txHash)} target="_blank" rel="noreferrer">
         <ExternalLink className="icon" aria-hidden />
         <span>{s.approved.receipt}</span>
       </a>

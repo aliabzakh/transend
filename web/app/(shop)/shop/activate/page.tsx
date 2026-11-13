@@ -7,32 +7,50 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PinPad } from "@/components/ui/PinPad";
 import { StatusLine } from "@/components/ui/StatusLine";
-import { activate } from "@/lib/demo/shop-engine";
-import { isCardId } from "@/lib/demo/codes";
+import { activationState, requestActivation, setPin, setLastCardId } from "@/lib/client/shop";
+import { ApiError } from "@/lib/client/api";
+import { isCardId } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
 
-type Step = "id" | "waiting" | "pin1" | "pin1b" | "duress" | "duressb" | "done";
+type Step = "id" | "waiting" | "pin1" | "pin1b" | "saving" | "done";
 
-const PROMPT: Record<"pin1" | "pin1b" | "duress" | "duressb", string> = {
+const PROMPT: Record<"pin1" | "pin1b", string> = {
   pin1: s.activate.pin1,
   pin1b: s.activate.pin1Again,
-  duress: s.activate.duress1,
-  duressb: s.activate.duress1Again,
 };
+
+const reasonText = (e: unknown) =>
+  s.activate.errors[e instanceof ApiError ? e.reason : "no_signal"] ?? s.activate.errors.unavailable;
 
 export default function ActivatePage() {
   const [step, setStep] = useState<Step>("id");
   const [cardId, setCardId] = useState("");
   const [error, setError] = useState<string | null>(null);
-  // PINs are held only in memory for the length of this flow.
-  const pins = useRef<{ pin?: string; duress?: string }>({});
+  const [busy, setBusy] = useState(false);
+  // The first PIN entry is held only in memory, for the length of this flow.
+  const pins = useRef<{ pin?: string }>({});
 
-  // Demo: the sender approves a moment after the shop asks.
+  // Wait for the sender's "Yes, that's her".
   useEffect(() => {
     if (step !== "waiting") return;
-    const t = setTimeout(() => setStep("pin1"), 2500);
-    return () => clearTimeout(t);
-  }, [step]);
+    let alive = true;
+    const poll = async () => {
+      try {
+        const { state } = await activationState(cardId);
+        if (!alive) return;
+        if (state === "approved") setStep("pin1");
+        if (state === "done") setStep("done");
+      } catch {
+        /* keep waiting; a dropped connection retries on the next tick */
+      }
+    };
+    poll();
+    const t = setInterval(poll, 3000);
+    return () => {
+      alive = false;
+      clearInterval(t);
+    };
+  }, [step, cardId]);
 
   const restart = (msg: string) => {
     pins.current = {};
@@ -40,24 +58,22 @@ export default function ActivatePage() {
     setStep("pin1");
   };
 
-  const onPin = (pin: string) => {
+  const onPin = async (pin: string) => {
     setError(null);
     if (step === "pin1") {
       pins.current.pin = pin;
       setStep("pin1b");
-    } else if (step === "pin1b") {
-      if (pin !== pins.current.pin) return restart(s.activate.mismatch);
-      setStep("duress");
-    } else if (step === "duress") {
-      if (pin === pins.current.pin) return restart(s.activate.same);
-      pins.current.duress = pin;
-      setStep("duressb");
-    } else if (step === "duressb") {
-      if (pin !== pins.current.duress) return restart(s.activate.mismatch);
-      const res = activate(cardId, pins.current.pin!, pins.current.duress!);
-      pins.current = {};
-      if (!res.ok) return restart(s.activate.same);
+      return;
+    }
+    if (pin !== pins.current.pin) return restart(s.activate.mismatch);
+    pins.current = {};
+    setStep("saving");
+    try {
+      await setPin(cardId, pin);
+      setLastCardId(cardId);
       setStep("done");
+    } catch (e) {
+      restart(reasonText(e));
     }
   };
 
@@ -66,16 +82,23 @@ export default function ActivatePage() {
       <Screen
         title={s.activate.title}
         back={{ href: "/shop", label: s.back }}
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const id = cardId.trim().toUpperCase();
           if (!isCardId(id)) return setError(s.activate.badId);
-          setCardId(id);
+          setBusy(true);
           setError(null);
-          setStep("waiting");
+          try {
+            await requestActivation(id);
+            setCardId(id);
+            setStep("waiting");
+          } catch (err) {
+            setError(reasonText(err));
+          }
+          setBusy(false);
         }}
         action={
-          <Button type="submit" icon={Send}>
+          <Button type="submit" icon={Send} disabled={busy}>
             {s.activate.ask}
           </Button>
         }
@@ -89,9 +112,7 @@ export default function ActivatePage() {
           value={cardId}
           onChange={(e) => setCardId(e.target.value)}
         />
-        {error ? (
-          <StatusLine icon={XCircle}>{error}</StatusLine>
-        ) : null}
+        {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
       </Screen>
     );
   }
@@ -107,10 +128,7 @@ export default function ActivatePage() {
 
   if (step === "done") {
     return (
-      <Screen
-        title={s.activate.done}
-        action={<Button href="/shop">{s.activate.finish}</Button>}
-      >
+      <Screen title={s.activate.done} action={<Button href="/shop">{s.activate.finish}</Button>}>
         <StatusLine icon={CheckCircle2}>{s.activate.doneLead}</StatusLine>
       </Screen>
     );
@@ -120,14 +138,20 @@ export default function ActivatePage() {
     <Screen title={s.activate.handOver}>
       <StatusLine icon={CheckCircle2}>{s.activate.approved}</StatusLine>
       {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
-      <p className="lead">{PROMPT[step]}</p>
-      <PinPad
-        resetKey={step}
-        submitLabel={s.activate.submit}
-        clearLabel={s.pin.clear}
-        backLabel={s.pin.back}
-        onSubmit={onPin}
-      />
+      {step === "saving" ? (
+        <p className="lead">{s.pin.working}</p>
+      ) : (
+        <>
+          <p className="lead">{PROMPT[step]}</p>
+          <PinPad
+            resetKey={step}
+            submitLabel={s.activate.submit}
+            clearLabel={s.pin.clear}
+            backLabel={s.pin.back}
+            onSubmit={onPin}
+          />
+        </>
+      )}
     </Screen>
   );
 }

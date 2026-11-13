@@ -9,46 +9,61 @@ import { Input, Select } from "@/components/ui/Input";
 import { Amount } from "@/components/ui/Amount";
 import { Row, Rows } from "@/components/ui/Row";
 import { StatusLine } from "@/components/ui/StatusLine";
-import { send, useSender } from "@/lib/demo/sender-store";
-import { quote, type Quote } from "@/lib/quote";
-import { CONFIG } from "@/lib/config";
+import { getQuote, send, useMe, type LiveQuote } from "@/lib/client/sender";
+import { ApiError } from "@/lib/client/api";
 import { cad } from "@/lib/format";
 import { s } from "@/strings/sender.en";
 
-type Live = Extract<Quote, { ok: true }> & { expiresAt: number };
+const sendError = (e: unknown) => {
+  const reason = e instanceof ApiError ? e.reason : "server_error";
+  return s.send.errors[reason] ?? s.errors[reason] ?? s.errors.server_error;
+};
 
 export default function SendPage() {
   const router = useRouter();
-  const st = useSender();
-  const active = st.cards.filter((c) => c.status === "Active");
+  const { me } = useMe();
   const [cardId, setCardId] = useState("");
   const [amount, setAmount] = useState("200");
   const [error, setError] = useState<string | null>(null);
-  const [live, setLive] = useState<Live | null>(null);
+  const [live, setLive] = useState<LiveQuote | null>(null);
   const [left, setLeft] = useState(0);
+  const [busy, setBusy] = useState(false);
 
-  const chosen = active.find((c) => c.id === cardId) ?? active[0];
-  const recipient = chosen ? st.recipients.find((r) => r.id === chosen.recipientId) : undefined;
+  const targets = (me?.recipients ?? []).filter(
+    (r) => r.card && (r.card.status === "Active" || r.card.status === "Pending"),
+  );
+  const chosen = targets.find((r) => r.card!.id === cardId) ?? targets[0];
 
   useEffect(() => {
     if (!live) return;
-    const tick = () => setLeft(Math.max(0, Math.ceil((live.expiresAt - Date.now()) / 1000)));
+    const expires = new Date(live.expiresAt).getTime();
+    const tick = () => setLeft(Math.max(0, Math.ceil((expires - Date.now()) / 1000)));
     tick();
     const t = setInterval(tick, 500);
     return () => clearInterval(t);
   }, [live]);
 
-  const getQuote = () => {
+  const fetchQuote = async () => {
+    if (!chosen?.card) return;
     setError(null);
-    const n = Number(amount);
-    const q = quote(n);
-    if (!q.ok) return setError(q.reason === "too_small" ? s.send.tooSmall : s.send.notANumber);
-    if (st.sentTodayCad + n > CONFIG.maxPerDayCad) return setError(s.send.overDay);
-    if (chosen && chosen.balanceUsd + q.usdOut > CONFIG.maxCardBalanceUsd) return setError(s.send.overCard);
-    setLive({ ...q, expiresAt: Date.now() + CONFIG.quoteSeconds * 1000 });
+    setBusy(true);
+    try {
+      setLive(await getQuote(chosen.card.id, Number(amount)));
+    } catch (e) {
+      setError(sendError(e));
+    }
+    setBusy(false);
   };
 
-  if (!chosen || !recipient) {
+  if (!me) {
+    return (
+      <Screen title={s.send.title} back={{ href: "/app", label: s.back }}>
+        <p className="muted">{s.loading}</p>
+      </Screen>
+    );
+  }
+
+  if (!chosen?.card) {
     return (
       <Screen title={s.send.title} back={{ href: "/app", label: s.back }}>
         <p>{s.send.noCard}</p>
@@ -63,21 +78,25 @@ export default function SendPage() {
         back={{ href: "/app", label: s.back }}
         onSubmit={(e) => {
           e.preventDefault();
-          getQuote();
+          fetchQuote();
         }}
-        action={<Button type="submit">{s.send.getQuote}</Button>}
+        action={
+          <Button type="submit" disabled={busy}>
+            {s.send.getQuote}
+          </Button>
+        }
       >
-        {active.length > 1 ? (
-          <Select label={s.send.to} value={chosen.id} onChange={(e) => setCardId(e.target.value)}>
-            {active.map((c) => (
-              <option key={c.id} value={c.id}>
-                {st.recipients.find((r) => r.id === c.recipientId)?.name}
+        {targets.length > 1 ? (
+          <Select label={s.send.to} value={chosen.card.id} onChange={(e) => setCardId(e.target.value)}>
+            {targets.map((r) => (
+              <option key={r.card!.id} value={r.card!.id}>
+                {r.name}
               </option>
             ))}
           </Select>
         ) : (
           <p className="lead">
-            {s.send.to} <strong>{recipient.name}</strong>
+            {s.send.to} <strong>{chosen.name}</strong>
           </p>
         )}
         <Input
@@ -103,21 +122,31 @@ export default function SendPage() {
       action={
         <>
           {expired ? (
-            <Button icon={RefreshCw} onClick={getQuote}>
+            <Button icon={RefreshCw} onClick={fetchQuote} disabled={busy}>
               {s.send.newQuote}
             </Button>
           ) : (
             <Button
               icon={Send}
-              onClick={() => {
-                send(chosen.id, live.amountCad, live.usdOut);
-                router.push(`/app/done?kind=sent&card=${chosen.id}&usd=${live.usdOut}&cad=${live.amountCad}`);
+              disabled={busy}
+              onClick={async () => {
+                setBusy(true);
+                setError(null);
+                try {
+                  const res = await send(live.quoteId);
+                  router.push(
+                    `/app/done?kind=sent&card=${res.cardId}&usd=${res.usdOut}&cad=${res.amountCad}&tx=${res.txHash}`,
+                  );
+                } catch (e) {
+                  setError(sendError(e));
+                  setBusy(false);
+                }
               }}
             >
-              {s.send.confirm(recipient.name)}
+              {busy ? s.send.sending : s.send.confirm(chosen.name.split(" ")[0])}
             </Button>
           )}
-          <Button variant="secondary" onClick={() => setLive(null)}>
+          <Button variant="secondary" onClick={() => setLive(null)} disabled={busy}>
             {s.send.changeAmount}
           </Button>
         </>
@@ -134,6 +163,11 @@ export default function SendPage() {
         <Row label={s.send.allIn} value={`${live.allInPct.toFixed(3)}%`} />
       </Rows>
       <p className="muted small">{s.send.demoRateNote}</p>
+      {error ? (
+        <div className="notice">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
       {expired ? (
         <div className="notice">
           <StatusLine icon={XCircle}>{s.send.expired}</StatusLine>

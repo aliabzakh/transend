@@ -8,15 +8,17 @@ import { Button } from "@/components/ui/Button";
 import { Amount } from "@/components/ui/Amount";
 import { PinPad } from "@/components/ui/PinPad";
 import { StatusLine } from "@/components/ui/StatusLine";
-import { balanceFor } from "@/lib/demo/shop-engine";
-import { isCardId } from "@/lib/demo/codes";
+import { balance } from "@/lib/client/shop";
+import { isCardId } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
 
+/** Card ID + PIN shows only "Available now": money set aside to grow is never shown at a shop. */
 export default function BalancePage() {
-  const [cardId, setCardId] = useState("TS4F2K9Q");
+  const [cardId, setCardId] = useState("");
   const [step, setStep] = useState<"id" | "pin" | "result">("id");
-  const [balance, setBalance] = useState(0);
+  const [amount, setAmount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (step === "id") {
     return (
@@ -53,31 +55,35 @@ export default function BalancePage() {
   if (step === "pin") {
     return (
       <Screen title={s.pin.title}>
-        <p className="lead">{s.pin.lead}</p>
+        <p className="lead">{busy ? s.pin.working : s.pin.lead}</p>
         {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
-        <PinPad
-          submitLabel={s.pin.submit}
-          clearLabel={s.pin.clear}
-          backLabel={s.pin.back}
-          onSubmit={(pin) => {
-            const res = balanceFor(cardId, pin);
-            if (!res.ok) {
-              const r = s.declined.reasons[res.reason];
-              setError(`${s.declined.title}: ${r.why}. ${r.what}`);
-              return;
-            }
-            setBalance(res.balanceUsd);
-            setError(null);
-            setStep("result");
-          }}
-        />
+        {busy ? null : (
+          <PinPad
+            submitLabel={s.pin.submit}
+            clearLabel={s.pin.clear}
+            backLabel={s.pin.back}
+            onSubmit={async (pin) => {
+              setBusy(true);
+              const res = await balance(cardId, pin);
+              setBusy(false);
+              if (!res.ok) {
+                const r = s.declined.reasons[res.reason];
+                setError(`${s.declined.title}: ${r.why}. ${r.what}`);
+                return;
+              }
+              setAmount(res.availableUsd);
+              setError(null);
+              setStep("result");
+            }}
+          />
+        )}
       </Screen>
     );
   }
 
   return (
     <Screen title={s.balance.result} action={<Button href="/shop">{s.balance.done}</Button>}>
-      <Amount value={balance} currency="USD" />
+      <Amount value={amount} currency="USD" />
       <p className="mono muted">{cardId}</p>
     </Screen>
   );

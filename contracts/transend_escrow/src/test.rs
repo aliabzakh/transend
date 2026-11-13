@@ -23,6 +23,15 @@ struct T<'a> {
     shop: Address,
 }
 
+fn savings_init() -> SavingsInit {
+    SavingsInit {
+        apy_bps: 400,
+        min_stake: 10 * USD,
+        min_liquid: 100 * USD,
+        max_staked_total: 5_000 * USD,
+    }
+}
+
 fn limits() -> Limits {
     Limits {
         max_balance: 635 * USD,
@@ -36,7 +45,7 @@ fn limits() -> Limits {
 
 /// The code printed on line `i` of a card: 12 Crockford base32 characters.
 fn code(env: &Env, card: &str, i: u32) -> Bytes {
-    Bytes::from_slice(env, std::format!("{}X{:03}ZZZZZZ", &card[2..4], i).as_bytes()[..12])
+    Bytes::from_slice(env, &std::format!("{}X{:03}ZZZZZZ", &card[2..4], i).as_bytes()[..12])
 }
 
 /// Independent re-implementation of the hash with plain byte arrays,
@@ -77,7 +86,7 @@ fn setup<'a>() -> T<'a> {
     StellarAssetClient::new(&env, &sac.address()).mint(&sender, &(5_000 * USD));
     let id = env.register(
         TransendEscrow,
-        (admin.clone(), sac.address(), verifier.clone(), limits()),
+        (admin.clone(), sac.address(), verifier.clone(), limits(), savings_init()),
     );
     let c = TransendEscrowClient::new(&env, &id);
     T { env, c, usdc, admin, verifier, sender, shop }
@@ -436,4 +445,186 @@ fn freeze_event_carries_no_reason_and_redeem_event_is_emitted() {
     // Topics are the name and the card ID; the data is empty, so no reason is recorded.
     assert_eq!(b.topics.len(), 2);
     assert!(matches!(&b.data, ScVal::Map(Some(m)) if m.0.is_empty()));
+}
+
+// ---- Savings (staking for yield) ----
+
+const T0: u64 = 1_800_000_000;
+
+/// Funds the yield reserve from the admin.
+fn fund_reserve(t: &T, amount: i128) {
+    StellarAssetClient::new(&t.env, &t.usdc.address).mint(&t.admin, &amount);
+    t.c.fund_yield_reserve(&amount);
+}
+
+#[test]
+fn stake_needs_the_senders_signature_and_respects_min_floor_and_cap() {
+    let t = funded(); // US$300
+    t.c.stake(&CARD, &(50 * USD));
+    let auths = t.env.auths();
+    assert_eq!(auths[0].0, t.sender, "only the sender signs a stake");
+    assert_eq!(t.c.staked_balance(&CARD), 50 * USD);
+    assert_eq!(t.c.liquid_balance(&CARD), 250 * USD);
+    assert_eq!(t.c.balance(&CARD), 300 * USD);
+
+    // Below the US$10 minimum.
+    assert_eq!(t.c.try_stake(&CARD, &(9 * USD)), Err(Ok(Error::BelowMinStake)));
+    // Would leave less than US$100 liquid (250 - 151 = 99).
+    assert_eq!(t.c.try_stake(&CARD, &(151 * USD)), Err(Ok(Error::InsufficientLiquid)));
+    t.c.stake(&CARD, &(150 * USD));
+    assert_eq!(t.c.liquid_balance(&CARD), 100 * USD);
+
+    // Total cap across all cards.
+    t.c.set_savings_limits(&(10 * USD), &(100 * USD), &(220 * USD));
+    t.c.deposit(&CARD, &t.sender, &(100 * USD));
+    assert_eq!(t.c.try_stake(&CARD, &(21 * USD)), Err(Ok(Error::OverStakeLimit)));
+    t.c.stake(&CARD, &(20 * USD));
+    assert_eq!(t.c.savings().staked_total, 220 * USD);
+}
+
+#[test]
+fn stake_without_the_senders_signature_fails() {
+    let t = funded();
+    t.env.set_auths(&[]);
+    assert!(t.c.try_stake(&CARD, &(50 * USD)).is_err());
+    assert!(t.c.try_unstake(&CARD, &USD).is_err());
+    assert_eq!(t.c.staked_balance(&CARD), 0);
+}
+
+#[test]
+fn stake_is_refused_when_staking_or_contract_is_paused_and_on_a_frozen_card() {
+    let t = funded();
+    t.c.pause_staking();
+    assert_eq!(t.c.try_stake(&CARD, &(50 * USD)), Err(Ok(Error::StakingPaused)));
+    t.c.unpause_staking();
+    t.c.pause();
+    assert_eq!(t.c.try_stake(&CARD, &(50 * USD)), Err(Ok(Error::Paused)));
+    t.c.unpause();
+    t.c.freeze(&CARD, &t.sender);
+    assert_eq!(t.c.try_stake(&CARD, &(50 * USD)), Err(Ok(Error::Frozen)));
+}
+
+#[test]
+fn unstake_works_on_a_frozen_card_and_while_paused() {
+    let t = funded();
+    t.c.stake(&CARD, &(100 * USD));
+    t.c.freeze(&CARD, &t.verifier);
+    t.c.pause();
+    t.c.pause_staking();
+    t.c.unstake(&CARD, &(40 * USD));
+    assert_eq!(t.c.staked_balance(&CARD), 60 * USD);
+    assert_eq!(t.c.try_unstake(&CARD, &(61 * USD)), Err(Ok(Error::InsufficientBalance)));
+    assert_eq!(t.c.try_unstake(&CARD, &0), Err(Ok(Error::BadInput)));
+    t.c.unstake(&CARD, &(60 * USD));
+    assert_eq!(t.c.savings().staked_total, 0);
+}
+
+#[test]
+fn redeem_above_the_liquid_balance_is_rejected_and_set_aside_money_is_untouched() {
+    let t = funded(); // 300
+    t.c.stake(&CARD, &(200 * USD)); // liquid 100
+    redeem(&t, 0, 60 * USD).unwrap(); // liquid 40, total 240
+    // 50 is covered by the total (240) but not by the liquid part (40).
+    assert_eq!(redeem(&t, 1, 50 * USD), Err(Error::InsufficientLiquid));
+    assert_eq!(t.c.staked_balance(&CARD), 200 * USD);
+    assert_eq!(t.c.liquid_balance(&CARD), 40 * USD);
+    assert_eq!(t.c.balance(&CARD), 240 * USD);
+    redeem(&t, 1, 40 * USD).unwrap();
+    assert_eq!(t.c.staked_balance(&CARD), 200 * USD, "a redeem never draws on Savings");
+}
+
+#[test]
+fn yield_matches_the_formula_and_is_capped_by_the_reserve() {
+    let t = funded();
+    fund_reserve(&t, 50 * USD);
+    t.c.stake(&CARD, &(200 * USD));
+    let loaded = t.c.card(&CARD).loaded_today;
+
+    // 30 days at 4.00%: 200 * 0.04 * 30 / 365 = 0.6575342 USDC.
+    t.env.ledger().set_timestamp(T0 + 30 * 86_400);
+    let paid = t.c.accrue(&CARD);
+    let expected = 200 * USD * 400 * (30 * 86_400) / (10_000 * 31_536_000);
+    assert_eq!(paid, expected);
+    assert_eq!(expected, 6_575_342);
+    assert_eq!(t.c.balance(&CARD), 300 * USD + expected);
+    assert_eq!(t.c.card(&CARD).yield_credited, expected);
+    assert_eq!(t.c.savings().yield_reserve, 50 * USD - expected);
+    // Yield is not a load: on a later day the daily load counter is not touched by it.
+    assert_eq!(t.c.card(&CARD).loaded_today, loaded);
+    // Yield lands as liquid money.
+    assert_eq!(t.c.liquid_balance(&CARD), 100 * USD + expected);
+}
+
+#[test]
+fn an_empty_reserve_pays_zero_and_does_not_fail() {
+    let t = funded();
+    t.c.stake(&CARD, &(200 * USD));
+    t.env.ledger().set_timestamp(T0 + 365 * 86_400);
+    assert_eq!(t.c.accrue(&CARD), 0);
+    assert_eq!(t.c.balance(&CARD), 300 * USD);
+    // A small reserve pays out only what it holds.
+    fund_reserve(&t, USD);
+    t.env.ledger().set_timestamp(T0 + 2 * 365 * 86_400);
+    assert_eq!(t.c.accrue(&CARD), USD);
+    assert_eq!(t.c.savings().yield_reserve, 0);
+    // Redeem still works with an empty reserve.
+    redeem(&t, 0, 10 * USD).unwrap();
+}
+
+#[test]
+fn speedup_scales_yield() {
+    let t = funded();
+    fund_reserve(&t, 100 * USD);
+    t.c.set_speedup(&1000);
+    assert_eq!(t.c.try_set_speedup(&0), Err(Ok(Error::BadInput)));
+    t.c.stake(&CARD, &(200 * USD));
+    t.env.ledger().set_timestamp(T0 + 86_400);
+    let one_day_x1000 = 200 * USD * 400 * 86_400 * 1000 / (10_000 * 31_536_000);
+    assert_eq!(t.c.accrue(&CARD), one_day_x1000);
+}
+
+#[test]
+fn stake_and_unstake_settle_accrued_yield_and_emit_events() {
+    use soroban_sdk::xdr::{ContractEventBody, ScVal};
+    let t = funded();
+    fund_reserve(&t, 10 * USD);
+    t.c.stake(&CARD, &(100 * USD));
+    t.env.ledger().set_timestamp(T0 + 10 * 86_400);
+    t.c.unstake(&CARD, &(100 * USD));
+    let events = t.env.events().all();
+    let names: std::vec::Vec<std::string::String> = events
+        .events()
+        .iter()
+        .filter_map(|e| {
+            let ContractEventBody::V0(b) = &e.body;
+            match &b.topics[0] {
+                ScVal::Symbol(s) => Some(s.to_utf8_string_lossy()),
+                _ => None,
+            }
+        })
+        .collect();
+    // The unstake call emits the yield it settled, then the unstake.
+    assert!(names.ends_with(&["yield".into(), "unstake".into()]), "{:?}", names);
+    let earned = 100 * USD * 400 * (10 * 86_400) / (10_000 * 31_536_000);
+    assert_eq!(t.c.card(&CARD).yield_credited, earned);
+    assert_eq!(t.c.try_accrue(&CARD), Err(Ok(Error::BadInput)), "nothing staked");
+}
+
+#[test]
+fn renewal_carries_the_staked_amount_and_refund_is_limited_to_liquid() {
+    let t = funded(); // 300
+    t.c.stake(&CARD, &(150 * USD)); // liquid 150
+    assert_eq!(t.c.try_refund(&CARD, &(151 * USD)), Err(Ok(Error::InsufficientLiquid)));
+    t.c.refund(&CARD, &(50 * USD)); // liquid 100, total 250
+
+    let new_rh = hash(&t.env, "TS7M3P8R", 20, &renewal_code(&t.env));
+    t.c.renew(&CARD, &renewal_code(&t.env), &CARD2, &hashes(&t.env, "TS7M3P8R"), &new_rh);
+    assert_eq!(t.c.staked_balance(&CARD2), 150 * USD);
+    assert_eq!(t.c.balance(&CARD2), 250 * USD);
+    assert_eq!(t.c.liquid_balance(&CARD2), 100 * USD);
+    assert_eq!(t.c.staked_balance(&CARD), 0);
+    assert_eq!(t.c.savings().staked_total, 150 * USD, "renewal does not change the total");
+    // The new card can move its savings back.
+    t.c.unstake(&CARD2, &(150 * USD));
+    assert_eq!(t.c.liquid_balance(&CARD2), 250 * USD);
 }

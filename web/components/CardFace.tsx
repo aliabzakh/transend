@@ -1,11 +1,14 @@
 import QRCode from "qrcode";
 import { Eraser, Smartphone, KeyRound } from "lucide-react";
 import { cardStrings } from "@/strings/card";
-import { demoCode, groupCode } from "@/lib/demo/codes";
+import { groupCode } from "@/lib/cards/format";
 import { CONFIG } from "@/lib/config";
 
-/** One-colour (black on white) card so it prints anywhere. Server component. */
-export async function CardFace({ cardId }: { cardId: string }) {
+/**
+ * On-screen preview of the printed card (the real card is the PDF from the API).
+ * Real codes are never kept, so without `codes` the lines show placeholders.
+ */
+export async function CardFace({ cardId, codes, renewalCode }: { cardId: string; codes?: string[]; renewalCode?: string }) {
   // The QR holds only the card ID. Recolour it to follow the text colour token.
   const svg = (await QRCode.toString(cardId, { type: "svg", margin: 0 })).replace(
     /(stroke|fill)="#(000000|ffffff)(?:ff)?"/gi,
@@ -42,12 +45,12 @@ export async function CardFace({ cardId }: { cardId: string }) {
         {lines.map((n) => (
           <div key={n} className="card-line">
             <span>{String(n).padStart(2, "0")}</span>
-            <span>{groupCode(demoCode(cardId, n))}</span>
+            <span>{codes?.[n - 1] ? groupCode(codes[n - 1]) : "•••• •••• ••••"}</span>
           </div>
         ))}
         <div className="card-line">
           <span>{cardStrings.renewalLabel}</span>
-          <span>{groupCode(demoCode(cardId, 21))}</span>
+          <span>{renewalCode ? groupCode(renewalCode) : "•••• •••• ••••"}</span>
         </div>
       </div>
     </article>
