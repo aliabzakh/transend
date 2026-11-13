@@ -11,13 +11,11 @@ import { activate } from "@/lib/demo/shop-engine";
 import { isCardId } from "@/lib/demo/codes";
 import { s } from "@/strings/shop.en";
 
-type Step = "id" | "waiting" | "pin1" | "pin1b" | "duress" | "duressb" | "done";
+type Step = "id" | "waiting" | "pin1" | "pin1b" | "done";
 
-const PROMPT: Record<"pin1" | "pin1b" | "duress" | "duressb", string> = {
+const PROMPT: Record<"pin1" | "pin1b", string> = {
   pin1: s.activate.pin1,
   pin1b: s.activate.pin1Again,
-  duress: s.activate.duress1,
-  duressb: s.activate.duress1Again,
 };
 
 export default function ActivatePage() {
@@ -25,7 +23,7 @@ export default function ActivatePage() {
   const [cardId, setCardId] = useState("");
   const [error, setError] = useState<string | null>(null);
   // PINs are held only in memory for the length of this flow.
-  const pins = useRef<{ pin?: string; duress?: string }>({});
+  const pins = useRef<{ pin?: string }>({});
 
   // Demo: the sender approves a moment after the shop asks.
   useEffect(() => {
@@ -47,16 +45,9 @@ export default function ActivatePage() {
       setStep("pin1b");
     } else if (step === "pin1b") {
       if (pin !== pins.current.pin) return restart(s.activate.mismatch);
-      setStep("duress");
-    } else if (step === "duress") {
-      if (pin === pins.current.pin) return restart(s.activate.same);
-      pins.current.duress = pin;
-      setStep("duressb");
-    } else if (step === "duressb") {
-      if (pin !== pins.current.duress) return restart(s.activate.mismatch);
-      const res = activate(cardId, pins.current.pin!, pins.current.duress!);
+      const res = activate(cardId, pins.current.pin!);
       pins.current = {};
-      if (!res.ok) return restart(s.activate.same);
+      if (!res.ok) return restart(s.activate.mismatch);
       setStep("done");
     }
   };

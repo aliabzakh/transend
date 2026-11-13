@@ -11,7 +11,6 @@ import type { AreaStatus } from "./areas";
 
 type EngineCard = {
   pin: string | null;
-  duress: string | null;
   balanceUsd: number;
   used: Set<number>;
   withdrawalsToday: number;
@@ -48,7 +47,6 @@ const cashCeilingUsd = () => Math.round(CONFIG.shopCashCeilingCad * CONFIG.demoR
 const cards = new Map<string, EngineCard>();
 cards.set("TS4F2K9Q", {
   pin: "1234",
-  duress: "4321",
   balanceUsd: 137.39,
   used: new Set([1, 2, 3]),
   withdrawalsToday: 0,
@@ -88,13 +86,11 @@ export const currentLimitUsd = () =>
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-/** Activation: the sender approves, then the recipient sets two different PINs. */
-export function activate(cardId: string, pin: string, duress: string): { ok: true } | { ok: false } {
-  if (pin === duress) return { ok: false };
+/** Activation: the sender approves, then the recipient sets one PIN. */
+export function activate(cardId: string, pin: string): { ok: true } | { ok: false } {
   const existing = cards.get(cardId);
   cards.set(cardId, {
     pin,
-    duress,
     balanceUsd: existing?.balanceUsd ?? 0,
     used: existing?.used ?? new Set(),
     withdrawalsToday: 0,
@@ -109,7 +105,7 @@ export function balanceFor(cardId: string, pin: string): { ok: true; balanceUsd:
   const c = cards.get(cardId);
   if (!c || !c.pin) return { ok: false, reason: "unavailable" };
   if (c.frozen) return { ok: false, reason: "unavailable" };
-  if (pin !== c.pin && pin !== c.duress) return { ok: false, reason: wrongPin(c) };
+  if (pin !== c.pin) return { ok: false, reason: wrongPin(c) };
   return { ok: true, balanceUsd: c.balanceUsd };
 }
 
@@ -124,8 +120,6 @@ function wrongPin(c: EngineCard): DeclineReason {
 
 /**
  * Same order of checks as the real service: signal, card, area, PIN, code, limits.
- * A duress PIN pays the preset amount, freezes the card, and returns the same
- * result shape as a normal approval.
  */
 export function redeem(input: {
   cardId: string;
@@ -141,8 +135,7 @@ export function redeem(input: {
   if (!c || !c.pin) return { ok: false, reason: "unavailable" };
   if (c.frozen) return { ok: false, reason: "unavailable" };
 
-  const isDuress = pin === c.duress;
-  if (pin !== c.pin && !isDuress) return { ok: false, reason: wrongPin(c) };
+  if (pin !== c.pin) return { ok: false, reason: wrongPin(c) };
   c.wrongPins = 0;
 
   if (line < 1 || line > CONFIG.linesPerCard) return { ok: false, reason: "wrong_code" };
@@ -150,17 +143,16 @@ export function redeem(input: {
   if (normalizeCode(input.code) !== demoCode(cardId, line)) return { ok: false, reason: "wrong_code" };
 
   const limit = currentLimitUsd();
-  if (!isDuress && amountUsd > limit) return { ok: false, reason: "over_limit", limitUsd: limit };
+  if (amountUsd > limit) return { ok: false, reason: "over_limit", limitUsd: limit };
   if (c.withdrawalsToday >= CONFIG.maxWithdrawalsPerDay) return { ok: false, reason: "over_limit" };
   if (amountUsd > c.balanceUsd) return { ok: false, reason: "not_enough" };
 
-  const pay = isDuress ? Math.min(CONFIG.duressDefaultUsd, c.balanceUsd) : amountUsd;
+  const pay = amountUsd;
   if (state.cashPaidTodayUsd + pay > cashCeilingUsd()) return { ok: false, reason: "shop_cash" };
 
   c.used.add(line);
   c.balanceUsd = round(c.balanceUsd - pay);
   c.withdrawalsToday += 1;
-  if (isDuress) c.frozen = true;
   set({ ...state, cashPaidTodayUsd: round(state.cashPaidTodayUsd + pay) });
   return { ok: true, payUsd: pay, cardId, line, at: new Date().toISOString() };
 }

@@ -12,7 +12,6 @@ import { getLastResult, setPending } from "@/lib/demo/shop-engine";
 import { explorerContractUrl } from "@/lib/config";
 import { s } from "@/strings/shop.en";
 
-/** The same screen for a normal approval and a duress approval. Nothing here can tell them apart. */
 export default function ApprovedPage() {
   const router = useRouter();
   const r = getLastResult();

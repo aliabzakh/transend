@@ -9,7 +9,6 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import {
   approveActivation,
   freezeCard,
-  simulateDuress,
   simulateShopRequest,
   unfreezeCard,
   useSender,
@@ -69,7 +68,6 @@ export default function CardPage() {
       <Rows>
         <Row label={s.card.id} value={<span className="mono">{card.id}</span>} />
         <Row label={s.card.lines} value={s.card.linesValue(card.linesUsed, CONFIG.linesPerCard)} />
-        <Row label={s.card.duress} value={s.card.duressValue(card.duressUsd.toFixed(2))} />
       </Rows>
 
       <Button href={`/app/cards/${card.id}/print`} variant="secondary" icon={Download}>
@@ -80,9 +78,6 @@ export default function CardPage() {
         <h2 className="section-title">{s.card.demoTitle}</h2>
         <Button variant="secondary" onClick={() => simulateShopRequest(card.id)} disabled={card.status !== "Pending"}>
           {s.card.demoShopRequest}
-        </Button>
-        <Button variant="secondary" onClick={() => simulateDuress(card.id)} disabled={card.status !== "Active"}>
-          {s.card.demoDuress}
         </Button>
       </section>
     </Screen>

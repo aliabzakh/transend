@@ -55,8 +55,6 @@ export const s = {
     status: "Status",
     lines: "Codes used",
     linesValue: (n: number, total: number) => `${n} of ${total}`,
-    duress: "If she is forced to take money",
-    duressValue: (usd: string) => `She is paid US$${usd}, then the card is on hold`,
     download: "Download card (PDF)",
     approve: "Yes, that's her",
     approveLead: (name: string) => `A shop wants to activate this card. Is this ${name}?`,
@@ -71,7 +69,6 @@ export const s = {
     },
     demoTitle: "Demo controls",
     demoShopRequest: "Demo: a shop asks to activate this card",
-    demoDuress: "Demo: a payout happens under pressure",
   },
   send: {
     title: "Send money",

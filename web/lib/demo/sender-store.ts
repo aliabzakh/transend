@@ -5,7 +5,7 @@
  * this module with calls to the API; screens only use the hooks and actions here.
  */
 import { useSyncExternalStore } from "react";
-import { CONFIG, type Department } from "../config";
+import type { Department } from "../config";
 import { newCardId } from "./codes";
 
 export type CardStatus = "Pending" | "Active" | "Frozen" | "Retired";
@@ -23,7 +23,6 @@ export type Card = {
   status: CardStatus;
   balanceUsd: number;
   linesUsed: number;
-  duressUsd: number;
   activationRequested: boolean;
 };
 export type Activity = {
@@ -67,7 +66,6 @@ export const SEED: State = {
       status: "Active",
       balanceUsd: 137.39,
       linesUsed: 3,
-      duressUsd: CONFIG.duressDefaultUsd,
       activationRequested: false,
     },
   ],
@@ -139,7 +137,6 @@ export function addRecipient(input: Omit<Recipient, "id" | "cardId">): { recipie
     status: "Pending",
     balanceUsd: 0,
     linesUsed: 0,
-    duressUsd: CONFIG.duressDefaultUsd,
     activationRequested: false,
   };
   set({ ...s, recipients: [...s.recipients, recipient], cards: [...s.cards, card] });
@@ -204,22 +201,6 @@ export function simulatePickup(cardId: string, amountUsd: number) {
   next = withActivity(next, { kind: "pickup", text: `${r.name} has the money (US$${amt.toFixed(2)})` });
   next = withInbox(next, "Transend", `${r.name} has the money (US$${amt.toFixed(2)}).`);
   next = withInbox(next, r.name, "Received, thank you");
-  set(next);
-}
-
-/** Demo control: a payout under duress. Looks normal to the shop; the sender is alerted. */
-export function simulateDuress(cardId: string) {
-  const s = getSnapshot();
-  const card = s.cards.find((c) => c.id === cardId)!;
-  const r = s.recipients.find((x) => x.id === card.recipientId)!;
-  const amt = Math.min(card.duressUsd, card.balanceUsd);
-  let next = patchCard(
-    cardId,
-    { status: "Frozen", balanceUsd: round(card.balanceUsd - amt), linesUsed: card.linesUsed + 1 },
-    s,
-  );
-  next = withActivity(next, { kind: "hold", text: `Please call ${r.name}. The card is on hold.` });
-  next = withInbox(next, "Transend", `Please call ${r.name}.`);
   set(next);
 }
 
