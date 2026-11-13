@@ -23,6 +23,15 @@ struct T<'a> {
     shop: Address,
 }
 
+fn savings_init() -> SavingsInit {
+    SavingsInit {
+        apy_bps: 400,
+        min_stake: 10 * USD,
+        min_liquid: 100 * USD,
+        max_staked_total: 5_000 * USD,
+    }
+}
+
 fn limits() -> Limits {
     Limits {
         max_balance: 635 * USD,
@@ -77,7 +86,7 @@ fn setup<'a>() -> T<'a> {
     StellarAssetClient::new(&env, &sac.address()).mint(&sender, &(5_000 * USD));
     let id = env.register(
         TransendEscrow,
-        (admin.clone(), sac.address(), verifier.clone(), limits()),
+        (admin.clone(), sac.address(), verifier.clone(), limits(), savings_init()),
     );
     let c = TransendEscrowClient::new(&env, &id);
     T { env, c, usdc, admin, verifier, sender, shop }

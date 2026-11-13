@@ -11,7 +11,7 @@ use soroban_sdk::{
     contract, contracterror, contractevent, contractimpl, token, xdr::ToXdr, Address, Bytes,
     BytesN, Env, Symbol, Vec,
 };
-pub use types::{Card, DataKey, Limits, Status};
+pub use types::{Card, DataKey, Limits, SavingsConfig, SavingsInit, Status};
 
 /// Lines on a card that pay out. The renewal code is a separate 21st secret.
 pub const LINES: u32 = 20;
@@ -19,6 +19,8 @@ const DAY_SECONDS: u64 = 86_400;
 // Ledgers close about every 5 s: bump when under 30 days, extend to 90 days.
 const TTL_THRESHOLD: u32 = 518_400;
 const TTL_EXTEND_TO: u32 = 1_555_200;
+const YEAR_SECONDS: i128 = 31_536_000;
+const BPS: i128 = 10_000;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -42,6 +44,11 @@ pub enum Error {
     BadInput = 16,
     /// Caller of `freeze` is neither the verifier nor the card's sender.
     NotAuthorized = 17,
+    StakingPaused = 18,
+    BelowMinStake = 19,
+    OverStakeLimit = 20,
+    /// Not enough liquid money: a redeem above it, or setting aside below the floor.
+    InsufficientLiquid = 21,
 }
 
 // Events. Topics are the event name plus card_id. `Freeze` carries no reason,
@@ -99,6 +106,27 @@ pub struct Refund {
     pub new_balance: i128,
 }
 #[contractevent]
+pub struct Stake {
+    #[topic]
+    pub card_id: Symbol,
+    pub amount: i128,
+    pub new_staked: i128,
+}
+#[contractevent]
+pub struct Unstake {
+    #[topic]
+    pub card_id: Symbol,
+    pub amount: i128,
+    pub new_staked: i128,
+}
+#[contractevent]
+pub struct Yield {
+    #[topic]
+    pub card_id: Symbol,
+    pub amount: i128,
+    pub new_balance: i128,
+}
+#[contractevent]
 pub struct Pause {
     pub paused: bool,
 }
@@ -108,13 +136,34 @@ pub struct TransendEscrow;
 
 #[contractimpl]
 impl TransendEscrow {
-    pub fn __constructor(env: Env, admin: Address, usdc: Address, verifier: Address, limits: Limits) {
+    pub fn __constructor(
+        env: Env,
+        admin: Address,
+        usdc: Address,
+        verifier: Address,
+        limits: Limits,
+        savings: SavingsInit,
+    ) {
         let s = env.storage().instance();
         s.set(&DataKey::Admin, &admin);
         s.set(&DataKey::Usdc, &usdc);
         s.set(&DataKey::Verifier, &verifier);
         s.set(&DataKey::Paused, &false);
         s.set(&DataKey::Limits, &limits);
+        s.set(
+            &DataKey::Savings,
+            &SavingsConfig {
+                vault: env.current_contract_address(),
+                apy_bps: savings.apy_bps,
+                min_stake: savings.min_stake,
+                min_liquid: savings.min_liquid,
+                max_staked_total: savings.max_staked_total,
+                staked_total: 0,
+                yield_reserve: 0,
+                speedup: 1,
+                staking_paused: false,
+            },
+        );
     }
 
     // ---- admin ----
@@ -178,6 +227,9 @@ impl TransendEscrow {
             day: Self::today(&env),
             loaded_today: 0,
             withdrawals_today: 0,
+            staked: 0,
+            yield_credited: 0,
+            stake_updated: env.ledger().timestamp(),
         };
         Self::save(&env, &card_id, &card);
         Issue { card_id, sender }.publish(&env);
@@ -269,6 +321,10 @@ impl TransendEscrow {
         if amount > card.balance {
             return Err(Error::InsufficientBalance);
         }
+        // Money set aside in Savings can never be collected at a shop.
+        if amount > card.balance - card.staked {
+            return Err(Error::InsufficientLiquid);
+        }
         Self::roll_day(&env, &mut card);
         if card.withdrawals_today >= limits.max_withdrawals_per_day {
             return Err(Error::TooManyWithdrawals);
@@ -319,6 +375,20 @@ impl TransendEscrow {
         Ok(Self::load(&env, &card_id)?.balance)
     }
 
+    /// What a shop can pay out now: the total minus what is set aside.
+    pub fn liquid_balance(env: Env, card_id: Symbol) -> Result<i128, Error> {
+        let card = Self::load(&env, &card_id)?;
+        Ok(card.balance - card.staked)
+    }
+
+    pub fn staked_balance(env: Env, card_id: Symbol) -> Result<i128, Error> {
+        Ok(Self::load(&env, &card_id)?.staked)
+    }
+
+    pub fn savings(env: Env) -> SavingsConfig {
+        Self::savings_cfg(&env)
+    }
+
     pub fn card(env: Env, card_id: Symbol) -> Result<Card, Error> {
         Self::load(&env, &card_id)
     }
@@ -348,6 +418,9 @@ impl TransendEscrow {
         if new_hashes.len() != LINES {
             return Err(Error::BadInput);
         }
+        let mut cfg = Self::savings_cfg(&env);
+        Self::settle(&env, &card_id, &mut old, &mut cfg);
+        Self::save_savings(&env, &cfg);
         let balance = old.balance;
         let new = Card {
             sender: old.sender.clone(),
@@ -360,9 +433,14 @@ impl TransendEscrow {
             day: old.day,
             loaded_today: old.loaded_today,
             withdrawals_today: old.withdrawals_today,
+            // Set-aside money moves with the card, so staked_total is unchanged.
+            staked: old.staked,
+            yield_credited: old.yield_credited,
+            stake_updated: old.stake_updated,
         };
         old.status = Status::Retired;
         old.balance = 0;
+        old.staked = 0;
         // The sender's card count is unchanged: the old card retires, the new one replaces it.
         Self::save(&env, &card_id, &old);
         Self::save(&env, &new_card_id, &new);
@@ -384,6 +462,10 @@ impl TransendEscrow {
         if amount > card.balance {
             return Err(Error::InsufficientBalance);
         }
+        // Set-aside money must be moved back before it can be refunded.
+        if amount > card.balance - card.staked {
+            return Err(Error::InsufficientLiquid);
+        }
         card.balance -= amount;
         Self::save(&env, &card_id, &card);
         token::Client::new(&env, &Self::usdc(&env)).transfer(
@@ -393,6 +475,141 @@ impl TransendEscrow {
         );
         Refund { card_id, amount, new_balance: card.balance }.publish(&env);
         Ok(())
+    }
+
+    // ---- Savings ("Grow" on screen) ----
+
+    /// Sets `amount` of the card's liquid money aside, where it earns yield and
+    /// no shop can pay it out.
+    pub fn stake(env: Env, card_id: Symbol, amount: i128) -> Result<(), Error> {
+        let mut card = Self::load(&env, &card_id)?;
+        card.sender.require_auth();
+        Self::not_paused(&env)?;
+        let mut cfg = Self::savings_cfg(&env);
+        if cfg.staking_paused {
+            return Err(Error::StakingPaused);
+        }
+        Self::require_active(&card)?;
+        if amount < cfg.min_stake || amount <= 0 {
+            return Err(Error::BelowMinStake);
+        }
+        Self::settle(&env, &card_id, &mut card, &mut cfg);
+        if card.balance - card.staked - amount < cfg.min_liquid {
+            return Err(Error::InsufficientLiquid);
+        }
+        if cfg.staked_total + amount > cfg.max_staked_total {
+            return Err(Error::OverStakeLimit);
+        }
+        // Mock vault: the USDC stays in this contract; only the books move.
+        card.staked += amount;
+        cfg.staked_total += amount;
+        Self::save(&env, &card_id, &card);
+        Self::save_savings(&env, &cfg);
+        Stake { card_id, amount, new_staked: card.staked }.publish(&env);
+        Ok(())
+    }
+
+    /// Moves set-aside money back to liquid. Always allowed, even on a Frozen
+    /// card and while the contract or staking is paused.
+    pub fn unstake(env: Env, card_id: Symbol, amount: i128) -> Result<(), Error> {
+        let mut card = Self::load(&env, &card_id)?;
+        card.sender.require_auth();
+        if card.status == Status::Retired {
+            return Err(Error::NotActive);
+        }
+        if amount <= 0 {
+            return Err(Error::BadInput);
+        }
+        if amount > card.staked {
+            return Err(Error::InsufficientBalance);
+        }
+        let mut cfg = Self::savings_cfg(&env);
+        Self::settle(&env, &card_id, &mut card, &mut cfg);
+        card.staked -= amount;
+        cfg.staked_total -= amount;
+        Self::save(&env, &card_id, &card);
+        Self::save_savings(&env, &cfg);
+        Unstake { card_id, amount, new_staked: card.staked }.publish(&env);
+        Ok(())
+    }
+
+    /// Credits the yield earned since the last accrual. Anyone may call it.
+    /// Returns the amount credited (zero when the reserve is empty).
+    pub fn accrue(env: Env, card_id: Symbol) -> Result<i128, Error> {
+        let mut card = Self::load(&env, &card_id)?;
+        if card.staked <= 0 {
+            return Err(Error::BadInput);
+        }
+        let mut cfg = Self::savings_cfg(&env);
+        let paid = Self::settle(&env, &card_id, &mut card, &mut cfg);
+        Self::save(&env, &card_id, &card);
+        Self::save_savings(&env, &cfg);
+        Ok(paid)
+    }
+
+    pub fn set_apy(env: Env, bps: u32) {
+        Self::admin(&env).require_auth();
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.apy_bps = bps;
+        Self::save_savings(&env, &cfg);
+    }
+
+    /// Moves demo USDC from the admin into the contract as the yield reserve.
+    pub fn fund_yield_reserve(env: Env, amount: i128) -> Result<(), Error> {
+        let admin = Self::admin(&env);
+        admin.require_auth();
+        if amount <= 0 {
+            return Err(Error::BadInput);
+        }
+        token::Client::new(&env, &Self::usdc(&env)).transfer(
+            &admin,
+            &env.current_contract_address(),
+            &amount,
+        );
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.yield_reserve += amount;
+        Self::save_savings(&env, &cfg);
+        Ok(())
+    }
+
+    pub fn pause_staking(env: Env) {
+        Self::admin(&env).require_auth();
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.staking_paused = true;
+        Self::save_savings(&env, &cfg);
+    }
+
+    pub fn unpause_staking(env: Env) {
+        Self::admin(&env).require_auth();
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.staking_paused = false;
+        Self::save_savings(&env, &cfg);
+    }
+
+    /// Demo clock. 1 in normal use; `/proof` shows it whenever it is not 1.
+    pub fn set_speedup(env: Env, n: u32) -> Result<(), Error> {
+        Self::admin(&env).require_auth();
+        if n == 0 {
+            return Err(Error::BadInput);
+        }
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.speedup = n;
+        Self::save_savings(&env, &cfg);
+        Ok(())
+    }
+
+    pub fn set_savings_limits(
+        env: Env,
+        min_stake: i128,
+        min_liquid: i128,
+        max_staked_total: i128,
+    ) {
+        Self::admin(&env).require_auth();
+        let mut cfg = Self::savings_cfg(&env);
+        cfg.min_stake = min_stake;
+        cfg.min_liquid = min_liquid;
+        cfg.max_staked_total = max_staked_total;
+        Self::save_savings(&env, &cfg);
     }
 }
 
@@ -409,6 +626,34 @@ impl TransendEscrow {
     }
     fn limits(env: &Env) -> Limits {
         env.storage().instance().get(&DataKey::Limits).unwrap()
+    }
+    fn savings_cfg(env: &Env) -> SavingsConfig {
+        env.storage().instance().get(&DataKey::Savings).unwrap()
+    }
+    fn save_savings(env: &Env, cfg: &SavingsConfig) {
+        env.storage().instance().set(&DataKey::Savings, cfg);
+    }
+    /// Credits yield earned since `stake_updated`:
+    /// staked * apy_bps / 10_000 * elapsed * speedup / 31_536_000,
+    /// capped at the reserve. Never mints and never fails. Yield is not a load,
+    /// so `loaded_today` is untouched. The caller saves both records.
+    fn settle(env: &Env, card_id: &Symbol, card: &mut Card, cfg: &mut SavingsConfig) -> i128 {
+        let now = env.ledger().timestamp();
+        let elapsed = now.saturating_sub(card.stake_updated) as i128;
+        card.stake_updated = now;
+        if card.staked <= 0 || elapsed == 0 {
+            return 0;
+        }
+        let earned = card.staked * cfg.apy_bps as i128 * elapsed * cfg.speedup as i128
+            / (BPS * YEAR_SECONDS);
+        let paid = earned.min(cfg.yield_reserve);
+        if paid > 0 {
+            cfg.yield_reserve -= paid;
+            card.balance += paid;
+            card.yield_credited += paid;
+            Yield { card_id: card_id.clone(), amount: paid, new_balance: card.balance }.publish(env);
+        }
+        paid
     }
     fn not_paused(env: &Env) -> Result<(), Error> {
         if env.storage().instance().get(&DataKey::Paused).unwrap_or(false) {
