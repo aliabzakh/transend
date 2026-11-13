@@ -45,12 +45,12 @@ def export_model(m: GradientBoostingRegressor, X: np.ndarray) -> dict:
                 "l": t.children_left.tolist(),
                 "r": t.children_right.tolist(),
                 "f": [int(v) for v in t.feature.tolist()],
-                "t": [round(float(v), 6) for v in t.threshold.tolist()],
-                "v": [round(float(v), 6) for v in t.value[:, 0, 0].tolist()],
+                "t": [float(v) for v in t.threshold.tolist()],
+                "v": [round(float(v), 9) for v in t.value[:, 0, 0].tolist()],
             }
         )
     init = float(m._raw_predict_init(X[:1])[0, 0])
-    exported = {"init": round(init, 6), "lr": m.learning_rate, "trees": trees}
+    exported = {"init": init, "lr": m.learning_rate, "trees": trees}
     # The JSON must reproduce scikit-learn's predictions.
     mine = np.array([score(exported, x) for x in X[:200]])
     theirs = m.predict(X[:200])
