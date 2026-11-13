@@ -49,7 +49,8 @@ const DOW = [0.6, 1.0, 0.95, 1.0, 1.05, 1.2, 1.55]; // Sun..Sat
 /** `days` of history ending the day before `end` (UTC). */
 export function sampleHistory(shopId: string, end: Date, days = 60): SampleDay[] {
   const rand = mulberry32(hashStr(`sample:${shopId}`));
-  const base = 35 + rand() * 45;
+  // A village shop serving a few dozen families: roughly US$120-250 a day.
+  const base = 120 + rand() * 90;
   const out: SampleDay[] = [];
   let tenseLeft = 0;
   for (let i = days; i >= 1; i--) {
