@@ -10,8 +10,14 @@
   },
   "dependencies": {
     "@stellar/stellar-sdk": "^17.4.0",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.4",
+    "hash-wasm": "^4.13.0",
+    "iron-session": "^9.1.0",
     "lucide-react": "^1.70.0",
     "next": "^16.4.5",
+    "pdf-lib": "^1.17.1",
+    "postgres": "^4.1.1",
     "qrcode": "^1.5.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
@@ -21,6 +27,14 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "typescript": "^7.0.2"
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
   }
 }
