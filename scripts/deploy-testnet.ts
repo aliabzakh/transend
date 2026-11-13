@@ -94,13 +94,19 @@ async function ensureFunded(kp: Keypair) {
   }
 }
 
-async function run(source: Keypair, op: xdr.Operation, label: string): Promise<xdr.ScVal | undefined> {
+async function run(
+  source: Keypair,
+  op: xdr.Operation,
+  label: string,
+  { classic = false } = {},
+): Promise<xdr.ScVal | undefined> {
   const account = await server.getAccount(source.publicKey());
   let tx = new TransactionBuilder(account, { fee: "100", networkPassphrase: PASSPHRASE })
     .addOperation(op)
     .setTimeout(60)
     .build();
-  tx = await server.prepareTransaction(tx);
+  // Only contract calls are simulated; classic ops (payment, trustline) are sent as built.
+  if (!classic) tx = await server.prepareTransaction(tx);
   tx.sign(source);
   const sent = await server.sendTransaction(tx);
   if (sent.status === "ERROR") throw new Error(`${label}: send failed ${JSON.stringify(sent.errorResult)}`);
@@ -182,15 +188,12 @@ async function main() {
 
   // 3. Yield reserve for Savings: the admin gets demo USDC and funds the contract with it.
   log("Funding the Savings yield reserve...");
-  try {
-    await run(admin.kp, Operation.changeTrust({ asset: usdc }), "admin USDC trustline");
-  } catch {
-    log("  (admin trustline already exists)");
-  }
+  await run(admin.kp, Operation.changeTrust({ asset: usdc }), "admin USDC trustline", { classic: true }); // a no-op if it exists
   await run(
     issuer.kp,
     Operation.payment({ destination: admin.kp.publicKey(), asset: usdc, amount: (Number(YIELD_RESERVE) / 1e7).toFixed(7) }),
     "issue demo USDC to admin",
+    { classic: true },
   );
   await run(
     admin.kp,
