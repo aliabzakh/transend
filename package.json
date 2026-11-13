@@ -5,7 +5,7 @@
   "description": "Transend MVP: repo-level scripts (deploy, seed, AML flags). The app lives in web/.",
   "scripts": {
     "deploy:testnet": "tsx scripts/deploy-testnet.ts",
-    "seed:demo": "tsx scripts/seed-demo.ts",
+    "seed:demo": "cd web && tsx --tsconfig tsconfig.json ../scripts/seed-demo.ts",
     "aml:flags": "tsx scripts/aml-flags.ts"
   },
   "dependencies": {
