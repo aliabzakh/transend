@@ -118,7 +118,9 @@ export default function GrowPage() {
         onChange={(e) => setAmount(e.target.value)}
         hint={
           mode === "in"
-            ? s.grow.hintSetAside(view.minStakeUsd.toFixed(2), view.maxStakeNowUsd.toFixed(2))
+            ? view.maxStakeNowUsd < view.minStakeUsd
+              ? s.grow.hintFull
+              : s.grow.hintSetAside(view.minStakeUsd.toFixed(2), view.maxStakeNowUsd.toFixed(2))
             : s.grow.hintMoveBack(view.setAsideUsd.toFixed(2))
         }
       />

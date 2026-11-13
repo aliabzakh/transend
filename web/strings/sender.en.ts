@@ -172,6 +172,7 @@ export const s = {
     moveBack: "Move back",
     hintSetAside: (min: string, max: string) => `From US$${min} up to US$${max}. US$100 always stays available.`,
     hintMoveBack: (max: string) => `Up to US$${max}.`,
+    hintFull: "Nothing more can be set aside now: US$100 must stay available.",
     done: "Done",
     errors: {
       bad_amount: "Enter an amount in numbers.",
