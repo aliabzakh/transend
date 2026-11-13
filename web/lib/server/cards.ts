@@ -3,7 +3,7 @@ import { db, schema } from "@/db";
 import { CONFIG, OPEN_DEPARTMENTS } from "../config";
 import { isSanctioned } from "../sanctions";
 import { randomCardId } from "../cards/format";
-import { generateCard } from "../cards/generate";
+import { generateCard, type CardSecrets } from "../cards/generate";
 import { cardsPdf } from "../cards/pdf";
 import * as escrow from "../stellar/escrow";
 import { HttpError } from "./http";
@@ -50,7 +50,11 @@ export async function addRecipient(
  * Only the hashes go on-chain (`issue_card`); the plain codes are returned once, in the
  * PDF, and never stored.
  */
-export async function issueCard(user: User, recipientId: string): Promise<{ cardId: string; pdf: Uint8Array }> {
+export async function issueCard(
+  user: User,
+  recipientId: string,
+  opts: { preferredId?: string } = {},
+): Promise<{ cardId: string; pdf: Uint8Array; secrets: CardSecrets }> {
   requireVerified(user);
   const recipient = await db.query.recipients.findFirst({ where: eq(schema.recipients.id, recipientId) });
   if (!recipient || recipient.senderId !== user.id) throw new HttpError(404, "not_found");
@@ -61,14 +65,14 @@ export async function issueCard(user: User, recipientId: string): Promise<{ card
   const all = await db.select({ id: schema.cards.id }).from(schema.cards).where(eq(schema.cards.senderId, user.id));
   if (all.length >= 3) throw new HttpError(409, "too_many_cards");
 
-  let cardId = randomCardId();
+  let cardId = opts.preferredId ?? randomCardId();
   while (await db.query.cards.findFirst({ where: eq(schema.cards.id, cardId) })) cardId = randomCardId();
   const secrets = generateCard(cardId);
   const res = await escrow.issueCard(senderKeypair(user), cardId, secrets.hashes, secrets.renewalHash);
   await db.insert(schema.cards).values({ id: cardId, senderId: user.id, recipientId, pdfIssuedAt: new Date() });
   await db.insert(schema.transfers).values({ kind: "issue", cardId, senderId: user.id, txHash: res.hash });
   const pdf = await cardsPdf([secrets]);
-  return { cardId, pdf };
+  return { cardId, pdf, secrets };
 }
 
 /** "Yes, that's her": the sender approves a shop's activation request. */
