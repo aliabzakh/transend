@@ -1,0 +1,37 @@
+/*
+ * Satoshi (Indian Type Foundry, free through Fontshare: https://fontshare.com/terms),
+ * self-hosted so the shop never waits on a third-party font server. The three files
+ * come unchanged from docs/design/Transend design language drafts.html and cover
+ * Kreyòl and French accents. A browser only downloads a weight a page actually uses.
+ */
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Satoshi";
+  src: url("/fonts/satoshi-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* A system font sized to Satoshi's metrics, so the text does not jump when Satoshi arrives. */
+@font-face {
+  font-family: "Satoshi Fallback";
+  src: local("Arial"), local("Helvetica"), local("Roboto");
+  size-adjust: 99%;
+  ascent-override: 102%;
+  descent-override: 24%;
+  line-gap-override: 10%;
+}
