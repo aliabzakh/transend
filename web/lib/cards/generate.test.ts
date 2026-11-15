@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { codeHash, generateCard, randomCode } from "./generate";
+import { PDFDocument } from "pdf-lib";
+import { LINES, codeHash, generateCard, randomCode } from "./generate";
 import { CROCKFORD, isCode, normalizeCode } from "./format";
 import { cardsPdf } from "./pdf";
+import { CARD_LAYOUT } from "./template.generated";
 
 describe("card codes", () => {
   it("are 12 Crockford base32 characters", () => {
@@ -34,8 +36,17 @@ describe("card codes", () => {
     expect(normalizeCode("IOL0")).toBe("1010");
   });
 
-  it("renders a PDF", async () => {
-    const pdf = await cardsPdf([generateCard("TS4F2K9Q")]);
-    expect(Buffer.from(pdf.slice(0, 5)).toString()).toBe("%PDF-");
+  it("renders the designed card: A6 front and back per card, or one Letter sheet per card", async () => {
+    const cards = [generateCard("TS4F2K9Q"), generateCard("TS7WQ3MK")];
+    const a6 = await PDFDocument.load(await cardsPdf(cards, "a6"));
+    expect(a6.getPageCount()).toBe(4);
+    expect(a6.getPage(0).getSize()).toEqual({ width: CARD_LAYOUT.width, height: CARD_LAYOUT.height });
+    const sheet = await PDFDocument.load(await cardsPdf(cards, "sheet"));
+    expect(sheet.getPageCount()).toBe(2);
+    expect(sheet.getPage(0).getSize()).toEqual({ width: 792, height: 612 });
+  });
+
+  it("has a slot on the template for every printed code", () => {
+    expect(CARD_LAYOUT.codes).toHaveLength(LINES);
   });
 });
