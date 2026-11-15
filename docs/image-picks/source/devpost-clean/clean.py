@@ -10,8 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from blocks import blocks
 from findmark import find
 
-SRC, OUT = sys.argv[1], sys.argv[2]
-os.makedirs(OUT, exist_ok=True)
+SRC = OUT = None  # set by main, or by a script that imports swap_marks
 LEAF, GOLD, FOREST = (47, 203, 122), (224, 165, 38), (15, 81, 50)
 
 # content bands (indices from blocks.py) to drop: grey explainer paragraphs, phone captions, sources + old logo
@@ -113,14 +112,22 @@ def blank_bottom_line(img, box):
     return Image.fromarray(a)
 
 
-for f in sorted(os.listdir(SRC)):
-    if not f.endswith(".png"):
-        continue
-    name = f[:-4]
-    img = Image.open(os.path.join(SRC, f)).convert("RGBA")
-    img = swap_marks(img, name)
-    img = drop_bands(img, name)
-    if name == "00-thumbnail":
-        img = blank_bottom_line(img, (80, 860, 640, 930))
-    img.convert("RGB").save(os.path.join(OUT, name + "-clean.png"), optimize=True)
-    print(name, Image.open(os.path.join(SRC, f)).size, "->", img.size)
+def main():
+    global SRC, OUT
+    SRC, OUT = sys.argv[1], sys.argv[2]
+    os.makedirs(OUT, exist_ok=True)
+    for f in sorted(os.listdir(SRC)):
+        if not f.endswith(".png"):
+            continue
+        name = f[:-4]
+        img = Image.open(os.path.join(SRC, f)).convert("RGBA")
+        img = swap_marks(img, name)
+        img = drop_bands(img, name)
+        if name == "00-thumbnail":
+            img = blank_bottom_line(img, (80, 860, 640, 930))
+        img.convert("RGB").save(os.path.join(OUT, name + "-clean.png"), optimize=True)
+        print(name, Image.open(os.path.join(SRC, f)).size, "->", img.size)
+
+
+if __name__ == "__main__":
+    main()
