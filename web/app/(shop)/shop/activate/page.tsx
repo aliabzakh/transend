@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Hourglass, Send, XCircle } from "lucide-react";
+import { Hourglass, Send, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { PinPad } from "@/components/ui/PinPad";
 import { StatusLine } from "@/components/ui/StatusLine";
+import { ResultMark } from "@/components/ui/ResultMark";
+import { HandOverIcon } from "@/components/ui/HandOverIcon";
 import { activationState, requestActivation, setPin, setLastCardId } from "@/lib/client/shop";
 import { ApiError } from "@/lib/client/api";
 import { isCardId } from "@/lib/cards/format";
@@ -98,7 +100,7 @@ export default function ActivatePage() {
           setBusy(false);
         }}
         action={
-          <Button type="submit" icon={Send} disabled={busy}>
+          <Button type="submit" icon={Send} busy={busy}>
             {s.activate.ask}
           </Button>
         }
@@ -112,37 +114,65 @@ export default function ActivatePage() {
           value={cardId}
           onChange={(e) => setCardId(e.target.value)}
         />
-        {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+        {error ? (
+          <div className="notice notice-error">
+            <StatusLine icon={XCircle}>{error}</StatusLine>
+          </div>
+        ) : null}
       </Screen>
     );
   }
 
   if (step === "waiting") {
     return (
-      <Screen title={s.activate.waiting}>
-        <StatusLine icon={Hourglass}>{s.activate.waitingLead}</StatusLine>
-        <p className="mono lead">{cardId}</p>
+      <Screen title={s.activate.waiting} center>
+        <span className="waiting" aria-hidden>
+          <Hourglass className="icon" />
+        </span>
+        <p className="muted" role="status">
+          {s.activate.waitingLead}
+        </p>
+        <p className="code">{cardId}</p>
       </Screen>
     );
   }
 
   if (step === "done") {
     return (
-      <Screen title={s.activate.done} action={<Button href="/shop">{s.activate.finish}</Button>}>
-        <StatusLine icon={CheckCircle2}>{s.activate.doneLead}</StatusLine>
+      <Screen
+        mark={<ResultMark kind="ok" />}
+        title={s.activate.done}
+        action={<Button href="/shop">{s.activate.finish}</Button>}
+      >
+        <p className="muted" role="status">
+          {s.activate.doneLead}
+        </p>
       </Screen>
     );
   }
 
   return (
-    <Screen title={s.activate.handOver}>
-      <StatusLine icon={CheckCircle2}>{s.activate.approved}</StatusLine>
-      {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+    <Screen title={s.activate.handOver} titleIcon={HandOverIcon} eyebrow={s.activate.approved}>
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
       {step === "saving" ? (
-        <p className="lead">{s.pin.working}</p>
+        <div className="stack center">
+          <span className="waiting" aria-hidden>
+            <HandOverIcon className="icon" />
+          </span>
+          <p className="lead" role="status">
+            {s.pin.working}
+          </p>
+        </div>
       ) : (
         <>
-          <p className="lead">{PROMPT[step]}</p>
+          <div className="spread">
+            <p className="lead">{PROMPT[step]}</p>
+            <span className="pill pill-wait">{s.activate.pinStep(step === "pin1" ? 1 : 2)}</span>
+          </div>
           <PinPad
             resetKey={step}
             submitLabel={s.activate.submit}

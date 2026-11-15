@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Send, XCircle } from "lucide-react";
+import { Check, Send, XCircle } from "lucide-react";
+import { ResultMark } from "@/components/ui/ResultMark";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -19,8 +20,14 @@ export default function MessagePage() {
 
   if (sent) {
     return (
-      <Screen title={s.message.sent} action={<Button href="/shop">{s.home.title}</Button>}>
-        <StatusLine icon={CheckCircle2}>{s.message.sentLead}</StatusLine>
+      <Screen
+        mark={<ResultMark kind="ok" />}
+        title={s.message.sent}
+        action={<Button href="/shop">{s.home.title}</Button>}
+      >
+        <p className="muted" role="status">
+          {s.message.sentLead}
+        </p>
       </Screen>
     );
   }
@@ -32,7 +39,8 @@ export default function MessagePage() {
       action={
         <Button
           icon={Send}
-          disabled={choice === null || !isCardId(cardId) || busy}
+          disabled={choice === null || !isCardId(cardId)}
+          busy={busy}
           onClick={async () => {
             setBusy(true);
             setError(false);
@@ -49,7 +57,7 @@ export default function MessagePage() {
         </Button>
       }
     >
-      <p>{s.message.lead}</p>
+      <p className="muted">{s.message.lead}</p>
       <Input
         label={s.message.cardId}
         mono
@@ -58,21 +66,28 @@ export default function MessagePage() {
         value={cardId}
         onChange={(e) => setCardId(e.target.value)}
       />
-      <div className="stack" role="radiogroup" aria-label={s.message.title}>
+      <div className="choices" role="radiogroup" aria-label={s.message.title}>
         {s.message.options.map((text, i) => (
           <button
             key={text}
             type="button"
             role="radio"
             aria-checked={choice === i}
-            className="seg"
+            className="choice"
             onClick={() => setChoice(i)}
           >
-            {text}
+            <span>{text}</span>
+            <span className="choice-check" aria-hidden>
+              <Check className="icon" />
+            </span>
           </button>
         ))}
       </div>
-      {error ? <StatusLine icon={XCircle}>{s.message.error}</StatusLine> : null}
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{s.message.error}</StatusLine>
+        </div>
+      ) : null}
     </Screen>
   );
 }

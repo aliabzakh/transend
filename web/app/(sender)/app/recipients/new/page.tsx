@@ -55,22 +55,22 @@ export default function NewRecipientPage() {
         }
       }}
       action={
-        <Button type="submit" icon={UserPlus} disabled={busy}>
+        <Button type="submit" icon={UserPlus} busy={busy}>
           {s.recipient.save}
         </Button>
       }
     >
       {blocked ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{s.recipient.blocked}</StatusLine>
         </div>
       ) : null}
       {error ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{error}</StatusLine>
         </div>
       ) : null}
-      {busy ? <p className="muted">{s.recipient.working}</p> : null}
+      {busy ? <p className="helper">{s.recipient.working}</p> : null}
       <Input name="name" label={s.recipient.name} required disabled={!!savedId} />
       <Input
         name="relationship"

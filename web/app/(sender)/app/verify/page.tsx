@@ -38,19 +38,23 @@ export default function VerifyPage() {
         }
       }}
       action={
-        <Button type="submit" icon={ShieldCheck} disabled={busy}>
+        <Button type="submit" icon={ShieldCheck} busy={busy}>
           {s.verify.continue}
         </Button>
       }
     >
-      <p>{s.verify.lead}</p>
+      <p className="muted">{s.verify.lead}</p>
       {blocked ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{s.verify.blockedTitle}</StatusLine>
           <p>{s.verify.blocked}</p>
         </div>
       ) : null}
-      {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
       <Input name="name" label={s.verify.name} required autoComplete="name" />
       <Input name="dob" label={s.verify.dob} type="date" required />
       <Input name="id" label={s.verify.id} type="file" accept="image/*" hint={s.verify.idHint} />

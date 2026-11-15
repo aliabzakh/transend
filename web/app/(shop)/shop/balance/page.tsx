@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { ArrowRight, XCircle } from "lucide-react";
+import { Card } from "@/components/ui/Card";
+import { HandOverIcon } from "@/components/ui/HandOverIcon";
 import { Screen } from "@/components/ui/Screen";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -47,17 +49,35 @@ export default function BalancePage() {
           value={cardId}
           onChange={(e) => setCardId(e.target.value)}
         />
-        {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+        {error ? (
+          <div className="notice notice-error">
+            <StatusLine icon={XCircle}>{error}</StatusLine>
+          </div>
+        ) : null}
       </Screen>
     );
   }
 
   if (step === "pin") {
     return (
-      <Screen title={s.pin.title}>
-        <p className="lead">{busy ? s.pin.working : s.pin.lead}</p>
-        {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
-        {busy ? null : (
+      <Screen title={s.pin.title} titleIcon={HandOverIcon}>
+        <div className="card card-tight">
+          <p className="caption muted">{s.balance.cardId}</p>
+          <p className="code">{cardId}</p>
+        </div>
+        <p className="small muted" role="status">
+          {busy ? s.pin.working : s.pin.lead}
+        </p>
+        {error ? (
+          <div className="notice notice-error">
+            <StatusLine icon={XCircle}>{error}</StatusLine>
+          </div>
+        ) : null}
+        {busy ? (
+          <span className="waiting" aria-hidden>
+            <HandOverIcon className="icon" />
+          </span>
+        ) : (
           <PinPad
             submitLabel={s.pin.submit}
             clearLabel={s.pin.clear}
@@ -82,9 +102,12 @@ export default function BalancePage() {
   }
 
   return (
-    <Screen title={s.balance.result} action={<Button href="/shop">{s.balance.done}</Button>}>
-      <Amount value={amount} currency="USD" />
-      <p className="mono muted">{cardId}</p>
+    <Screen title={s.balance.result} center action={<Button href="/shop">{s.balance.done}</Button>}>
+      <Card variant="receipt">
+        <Amount value={amount} currency="USD" center reveal />
+        <hr className="divider" />
+        <p className="mono muted">{cardId}</p>
+      </Card>
     </Screen>
   );
 }

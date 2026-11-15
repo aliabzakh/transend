@@ -6,4 +6,6 @@ export const common = {
   continue: "Continue",
   cancel: "Cancel",
   demoRateLabel: "Demo rate",
+  loading: "Loading...",
+  pinEntered: (n: number, total: number) => `${n} of ${total} digits entered`,
 } as const;

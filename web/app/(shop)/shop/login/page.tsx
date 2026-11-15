@@ -32,15 +32,19 @@ export default function ShopLoginPage() {
         }
       }}
       action={
-        <Button type="submit" icon={LogIn} disabled={busy}>
+        <Button type="submit" icon={LogIn} busy={busy}>
           {s.login.submit}
         </Button>
       }
     >
-      {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
       <Input name="code" label={s.login.code} autoComplete="username" autoCapitalize="characters" required />
       <Input name="password" label={s.login.password} type="password" autoComplete="current-password" required />
-      <p className="muted small">{s.login.demo}</p>
+      <p className="helper">{s.login.demo}</p>
     </Screen>
   );
 }

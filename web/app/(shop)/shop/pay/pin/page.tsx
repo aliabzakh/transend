@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PinPad } from "@/components/ui/PinPad";
 import { Screen } from "@/components/ui/Screen";
-import { Rows, Row } from "@/components/ui/Row";
+import { HandOverIcon } from "@/components/ui/HandOverIcon";
 import { getPending, redeem, setLastCardId, setLastResult } from "@/lib/client/shop";
 import { groupCode } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
@@ -22,27 +22,39 @@ export default function PayPinPage() {
   if (!pending) return null;
 
   return (
-    <Screen title={s.pin.title}>
-      <Rows>
-        <Row label={s.pin.cardLine(pending.line)} value={<span className="mono">{groupCode(pending.code)}</span>} />
-        <Row label={s.pin.approving(pending.amountUsd.toFixed(2))} value="" />
-      </Rows>
-      <p className="lead">{busy ? s.pin.working : s.pin.lead}</p>
-      {busy ? null : (
-        <PinPad
-          submitLabel={s.pin.submit}
-          clearLabel={s.pin.clear}
-          backLabel={s.pin.back}
-          onSubmit={async (pin) => {
-            setBusy(true);
-            const result = await redeem({ ...pending, pin });
-            setLastResult(result);
-            setLastCardId(pending.cardId);
-            router.push(result.ok ? "/shop/approved" : "/shop/declined");
-          }}
-        />
+    <Screen title={s.pin.title} titleIcon={HandOverIcon}>
+      <div className="card card-tight handover">
+        <p className="caption muted">{s.pin.cardLineReady(pending.line)}</p>
+        <p className="code">{groupCode(pending.code)}</p>
+        <p className="handover-amount">{s.pin.approving(pending.amountUsd.toFixed(2))}</p>
+      </div>
+      {busy ? (
+        <div className="stack center">
+          <span className="waiting" aria-hidden>
+            <HandOverIcon className="icon" />
+          </span>
+          <p className="lead" role="status">
+            {s.pin.working}
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="small muted">{s.pin.lead}</p>
+          <PinPad
+            submitLabel={s.pin.submit}
+            clearLabel={s.pin.clear}
+            backLabel={s.pin.back}
+            onSubmit={async (pin) => {
+              setBusy(true);
+              const result = await redeem({ ...pending, pin });
+              setLastResult(result);
+              setLastCardId(pending.cardId);
+              router.push(result.ok ? "/shop/approved" : "/shop/declined");
+            }}
+          />
+        </>
       )}
-      <p className="muted small">{s.pin.helper}</p>
+      <p className="helper center">{s.pin.helper}</p>
     </Screen>
   );
 }

@@ -1,28 +1,70 @@
 /*
  * Every visual value in the product lives in this file.
- * Components never hard-code a colour, font, size, radius, spacing or width.
- * A later design addendum restyles the whole product by editing only this file.
+ * Components never hard-code a colour, font, size, radius, spacing, width or timing.
+ * Draft A, "Satoshi · Night market" (docs/design/Transend design language drafts.html),
+ * with fully rounded (pill) keypad keys. Dark only; Cream is for print and the deck.
  */
 :root {
-  /* Colour */
-  --color-bg: #ffffff; /* Page background */
-  --color-fg: #000000; /* Text, primary buttons, icons */
-  --color-muted: #595959; /* Secondary text (7:1 on white) */
-  --color-line: #d9d9d9; /* Borders and dividers */
-  --color-surface: #f5f5f5; /* Cards, keypad keys */
+  color-scheme: dark;
+
+  /* Colour (Draft A palette) */
+  --color-bg: #0b1a13; /* Night: page ground, the keypad's Back key */
+  --color-surface: #12291e; /* Canopy: cards, keys, inputs */
+  --color-surface-raise: #17331f; /* Canopy on hover */
+  --color-surface-press: #1d3d29; /* Canopy while pressed: a clear tone change */
+  --color-fg: #f3f5f0; /* Off-white: text, icons, filled PIN dots */
+  --color-muted: #a8b8ae; /* Secondary text, labels (7.4:1 on Canopy) */
+  --color-hint: #8fa197; /* Helper lines (6.6:1 on Night) */
+  --color-line: #2a3d33; /* Borders */
+  --color-divider: #24402f; /* 1 px rule inside a receipt card */
+  --color-ring: #5e7266; /* Empty PIN dot outline */
+  --color-action: #2fcb7a; /* Leaf: the one primary action, success */
+  --color-action-hover: #45d68a;
+  --color-action-press: #26b56b;
+  --color-on-action: #0b1a13; /* Text on Leaf (8.5:1) */
+  --color-action-tint: #9fe3be; /* Text of the small label pill */
+  --color-action-wash: rgba(47, 203, 122, 0.14); /* Flat Leaf wash: selected rows, the forecast band */
+  --color-highlight: #e0a526; /* Gold: the person being paid, replies, the hand-over icon */
+  --color-on-highlight: #3a2805; /* Text on Gold (6.4:1) */
+  --color-warn: #c2462b; /* Clay: a fill with off-white text (4.6:1), or icons and large text. Never small text on Night */
+  --color-warn-press: #a93b23;
+  --color-brand: #0f5132; /* Forest: marks on light grounds (print) */
+  --color-earth: #74491a; /* Reserved for illustration */
+  --color-paper: #fff7e8; /* Cream: print and deck only */
+  --color-scrim: rgba(11, 26, 19, 0.92); /* Pinned action bar over scrolled content */
 
   /* Type */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Satoshi", "Satoshi Fallback", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 28px;
-  --text-2xl: 40px; /* Amounts, with tabular-nums */
-  --weight-normal: 400;
-  --weight-bold: 700;
+  --text-display: 48px; /* Sender amount ("You send") */
+  --text-receipt: 34px; /* Receipt amount */
+  --text-title: 26px; /* Screen title */
+  --text-code: 22px; /* Card code on hand-over */
+  --text-key: 22px; /* Keypad digit */
+  --text-button: 17px; /* Button label */
+  --text-lead: 16px; /* Names, instruction line, body */
+  --text-value: 15px; /* Row values, small buttons */
+  --text-label: 14px; /* Row labels, secondary */
+  --text-caption: 13px;
+  --text-helper: 12px;
+  --text-chip: 12px;
+  /* Old names, kept so existing code keeps working */
+  --text-sm: var(--text-label);
+  --text-base: var(--text-lead);
+  --text-lg: var(--text-button);
+  --text-xl: var(--text-title);
+  --text-2xl: var(--text-display);
+
+  --weight-normal: 400; /* Body */
+  --weight-medium: 500; /* Headings, numbers */
+  --weight-bold: 700; /* Display */
+  --weight-body: var(--weight-normal); /* The shop sets this to 500 so it loads two weights only */
   --leading: 1.5;
   --leading-tight: 1.15;
+  --tracking-display: -0.02em;
+  --tracking-title: -0.01em;
+  --tracking-code: 0.06em;
+  --tracking-eyebrow: 0.1em;
 
   /* Spacing (4 px steps) */
   --space-1: 4px;
@@ -33,24 +75,94 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
+  --gap-block: 18px; /* Between blocks on a screen (draft: 14 to 18) */
+  --gap-tight: 14px;
+  --screen-pad: 20px;
 
   /* Shape and sizing */
-  --radius: 8px; /* Buttons, inputs, cards */
+  --radius-card: 16px;
+  --radius-receipt: 18px;
+  --radius-button: 16px;
+  --radius-key: 999px; /* Full pill: 26 px at the 52 px key height. Draft A itself uses 14 px */
+  --radius-chip: 18px 18px 18px 4px; /* Speech bubble, tail lower-left */
+  --radius-pill: 999px;
+  --radius-input: 14px;
+  --radius-swatch: 12px;
+  --radius: var(--radius-button); /* Old alias */
+  --control-height: 52px; /* Buttons and keys */
   --tap: 48px; /* Minimum height of any control */
+  --tile-height: 76px; /* The shop's big home buttons */
   --border: 1px;
   --focus-width: 2px;
   --focus-offset: 2px;
+  --focus-color: var(--color-action);
   --icon: 20px; /* Outline icons, always beside a text label */
+  --icon-lg: 24px;
+  --mark: 56px; /* Success / declined mark */
+  --avatar: 40px;
+  --pin-dot: 14px;
+  --pin-dot-gap: 14px;
+  --pin-dot-ring: 2px;
+  --key-gap: 8px;
+  --meter-height: 6px;
   --measure: 480px; /* Widest a screen column gets */
+  --measure-wide: 960px; /* Admin and judges' pages */
   --code-spacing: 0.08em;
+  --chip-max: 260px;
 
-  /* Logo (Held mark, docs/brand). Forest arms suit this light ground; the Draft A restyle sets them to Leaf #2FCB7A on Night */
-  --logo-arms: #0f5132;
-  --logo-coin: #e0a526;
+  /* Motion. Small, quick, purposeful. Keys never animate longer than 100 ms */
+  --dur-press: 80ms; /* Tap feedback */
+  --dur-fast: 100ms; /* Hover, focus, key and dot changes */
+  --dur-base: 180ms; /* Things appearing */
+  --dur-slow: 320ms; /* The success mark drawing */
+  --dur-meter: 500ms; /* A meter filling */
+  --dur-pulse: 1600ms; /* Waiting loops */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* A small overshoot, then settle */
+  --press-scale: 0.97;
+  --key-press-scale: 0.94;
+  --pop-scale: 1.25;
+  --rise: 8px; /* How far content rises as it appears */
+  --shake: 3px;
+  --stagger: 30ms;
+
+  /* Logo (Held mark, docs/brand): Leaf arms and a Gold coin on Night */
+  --logo-arms: var(--color-action);
+  --logo-coin: var(--color-highlight);
   --logo-size: 24px; /* Mark height in the app header */
+  --logo-size-lg: 48px;
   --wordmark-spacing: -0.02em;
 
-  /* Print card (folded size) */
+  /* Charts (admin forecast view) */
+  --chart-height: 180px;
+  --chart-band: rgba(47, 203, 122, 0.3); /* Leaf, flat, strong enough to read beside the history bars */
+  --chart-line: var(--color-action);
+  --chart-history: var(--color-hint); /* Grey ring failed 3:1 on Canopy (dataviz validator) */
+  --chart-tip-width: 180px;
+  --chart-ceiling: var(--color-highlight);
+  --chart-grid: var(--color-divider);
+
+  /* Print card (folded size). The printed card stays one colour on white */
   --card-width: 105mm;
   --card-height: 74mm;
+  --print-fg: #000000;
+  --print-bg: #ffffff;
+}
+
+/* People who ask for less motion get state changes without movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-press: 0ms;
+    --dur-fast: 0ms;
+    --dur-base: 0ms;
+    --dur-slow: 0ms;
+    --dur-meter: 0ms;
+    --press-scale: 1;
+    --key-press-scale: 1;
+    --pop-scale: 1;
+    --rise: 0px;
+    --shake: 0px;
+    --stagger: 0ms;
+  }
 }

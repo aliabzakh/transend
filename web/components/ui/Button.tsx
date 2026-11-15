@@ -1,26 +1,33 @@
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import type { ButtonHTMLAttributes, ComponentType, ReactNode } from "react";
 
 type IconType = ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
 
 type Common = {
-  variant?: "primary" | "secondary";
+  /** Primary: Leaf fill. Secondary: Leaf outline. Ghost: text only. Danger: Clay fill. */
+  variant?: "primary" | "secondary" | "ghost" | "danger";
+  /** A large tile (the shop's home buttons), with a chevron. */
   big?: boolean;
   icon?: IconType;
+  /** Shows a spinner, keeps the label, and blocks a second tap. */
+  busy?: boolean;
   children: ReactNode;
 };
 
 type ButtonProps = Common & ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined };
 type LinkProps = Common & { href: string; className?: string };
 
-/** Primary: black fill, white text. Secondary: white fill, 1 px black border. Full width. */
+/** 52 px tall, full width on mobile, label 17 / 700. Presses scale slightly. */
 export function Button(props: ButtonProps | LinkProps) {
-  const { variant = "primary", big, icon: Icon, children } = props;
-  const cls = `btn btn-${variant}${big ? " btn-big" : ""}`;
+  const { variant = "primary", big, icon: Icon, busy, children } = props;
+  const extra = "className" in props && props.className ? ` ${props.className}` : "";
+  const cls = `btn btn-${variant}${big ? " btn-big" : ""}${extra}`;
   const inner = (
     <>
-      {Icon ? <Icon className="icon" aria-hidden /> : null}
-      <span>{children}</span>
+      {busy ? <span className="btn-spinner" aria-hidden /> : Icon ? <Icon className="icon" aria-hidden /> : null}
+      <span className="btn-label">{children}</span>
+      {big ? <ChevronRight className="icon btn-chevron" aria-hidden /> : null}
     </>
   );
   if ("href" in props && props.href) {
@@ -30,9 +37,25 @@ export function Button(props: ButtonProps | LinkProps) {
       </Link>
     );
   }
-  const { variant: _v, big: _b, icon: _i, children: _c, type, ...rest } = props as ButtonProps;
+  const {
+    variant: _v,
+    big: _b,
+    icon: _i,
+    busy: _busy,
+    children: _c,
+    className: _cn,
+    type,
+    disabled,
+    ...rest
+  } = props as ButtonProps;
   return (
-    <button type={type ?? "button"} className={cls} {...rest}>
+    <button
+      type={type ?? "button"}
+      className={cls}
+      disabled={disabled || busy}
+      aria-busy={busy || undefined}
+      {...rest}
+    >
       {inner}
     </button>
   );

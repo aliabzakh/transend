@@ -11,7 +11,7 @@ Two tracks build in parallel (see the PRD's "How to read this document"): **Core
 |---|---|---|---|
 | 1 | Contract, tests, deploy | Core | Done (v1) |
 | 1b | Contract v2: no duress, redeploy | Core | Done: 27 tests, redeployed as `CCNJKUOE...` |
-| 2 | App shell and screens | UI + Core | Core done (auth, database, view-models). UI track (Draft A restyle, U1 to U8) not started |
+| 2 | App shell and screens | UI + Core | Done: Core (auth, database, view-models) and UI U1 to U7 (Draft A restyle, branch `ui/draft-a`). U8 (accessibility pass) is milestone 5 |
 | 3 | Wire API to contract | Core | Done |
 | 3b | Trained forecast | Core | Done (on synthetic data) |
 | 4 | End-to-end demo works | Both | Done, locally and on https://transend.vercel.app (Neon database) |
@@ -79,7 +79,7 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 | 12 | Only the sponsor pays fees | Pass at runtime: every transaction is fee-bumped; sender and shop accounts hold 0 XLM. The issuer, admin and verifier hold Friendbot XLM from the deploy script |
 | 13 | Every transaction links to stellar.expert | Pass |
 | 14 | 360 px and Slow 3G | 360 px pass (PIN pad fits, 48 px keys). Slow 3G not yet checked (milestone 5). Shop JS about 140 KB gzipped for modern browsers |
-| 15 | Draft A UI | Not started (UI track) |
+| 15 | Draft A UI | Done on `ui/draft-a` (U1 to U7); U8 pass in milestone 5 |
 | 16 | Playwright test | Not started (milestone 5) |
 
 **Live URL (checked Nov 13, 2026 after merging PR #2):** https://transend.vercel.app runs on Neon and the same testnet contract. Passed there through the API and `/proof`:
@@ -110,5 +110,20 @@ The browser screens were not clicked through on the live URL; they were on the l
 2. Playwright end-to-end test.
 3. `docs/technical.md`, `docs/architecture.png`, README polish.
 4. 15 printed demo cards (`npm run seed:demo -- --cards 15` or `/admin/cards`).
-5. Slow 3G check; UI track U1 to U8.
+5. Slow 3G check; UI track U8 (accessibility pass).
 6. Stretch: renewal flow in the app, `scripts/aml-flags.ts`, SMS mode.
+
+## Milestone 2 (UI): Draft A restyle (done)
+
+| Package | Files | Result |
+|---|---|---|
+| U1 tokens, fonts | `web/styles/tokens.css`, `web/styles/fonts.css`, `web/public/fonts/` | Night palette, Draft A type scale, pill keys, motion tokens (zeroed under reduced motion). Satoshi 400/500/700 self-hosted from the design file, accents covered, metric-matched fallback |
+| U2 primitives, style guide | `web/components/ui/*`, `web/app/dev/styleguide` | Button (busy, ghost, danger), Input (error), Card, Avatar, ReplyChip, ResultMark, Meter, Skeleton; every state on `/dev/styleguide` (404 in production) |
+| U3 PinPad | `web/components/ui/PinPad.tsx` | Pill keys; Back, last digit, Done on the last row; Clear by the dots; screen reader count. Scramble, auto-clear, props unchanged. Fits 360 x 640 |
+| U4 sender | `web/app/(sender)/app/**` | Greeting, recipient cards, big C$ entry, quote with live bar, drawn result marks, Gold replies |
+| U5 shop | `web/app/(shop)/shop/**` | Area pill control, big tiles, cash meter, Draft A hand-over screen. Loads only Satoshi 500 and 700; about 141 KB gzipped JS for modern browsers (plus a 39 KB `noModule` polyfill only old browsers load) |
+| U6 forecast view | `web/components/Forecast*.tsx`, `web/app/admin/cash/*` | Band chart with hover and keyboard readout, ceiling, restock days, table; loading, empty and error states |
+| U7 admin, proof, landing | `web/app/admin/**`, `web/app/proof`, `web/app/page.tsx` | Restyled; no sideways scroll at 360 px |
+
+Microinteractions are CSS only (no motion library, so the shop budget holds): presses scale, content rises in with a short stagger, PIN dots pop, the result mark draws itself, declines shake once, waiting states breathe, meters fill. Data the screens still want is in [ui-requests.md](ui-requests.md).
+

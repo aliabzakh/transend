@@ -5,7 +5,7 @@ import { Logo } from "@/components/ui/Logo";
 
 export default function SenderLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="app-root">
       <header className="app-header">
         <Link href="/app" className="brand">
           <Logo wordmark={s.brand} />
@@ -17,6 +17,6 @@ export default function SenderLayout({ children }: { children: React.ReactNode }
       </header>
       {children}
       <footer className="app-footer">{s.footer}</footer>
-    </>
+    </div>
   );
 }
