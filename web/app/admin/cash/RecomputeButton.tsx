@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { apiPost } from "@/lib/client/api";
+import { a } from "@/strings/admin.en";
 
 /** Runs the nightly forecast job now and reloads the dashboard. */
 export function RecomputeButton() {
@@ -13,7 +14,7 @@ export function RecomputeButton() {
   return (
     <Button
       icon={RefreshCw}
-      disabled={busy}
+      busy={busy}
       onClick={async () => {
         setBusy(true);
         try {
@@ -24,7 +25,7 @@ export function RecomputeButton() {
         }
       }}
     >
-      {busy ? "Recomputing..." : "Recompute"}
+      {busy ? a.cash.recomputing : a.cash.recompute}
     </Button>
   );
 }
