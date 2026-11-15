@@ -42,6 +42,10 @@ export const env = {
   get sessionSecret() {
     return need("SESSION_SECRET");
   },
+  /** Never change once cards exist: every card's on-chain ID is derived from it. */
+  get cardIdSecret() {
+    return need("CARD_ID_SECRET");
+  },
   get forecastMode(): "rules" | "model" {
     return process.env.FORECAST_MODEL_MODE === "model" ? "model" : "rules";
   },

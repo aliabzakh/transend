@@ -7,11 +7,10 @@
  * Code hashes for issue_card must be built with this scrambled ID, not the printed one.
  */
 import { createHmac } from "node:crypto";
+import { env } from "../server/env";
 
 export function chainCardId(printedId: string): string {
-  const secret = process.env.CARD_ID_SECRET;
-  if (!secret) throw new Error("CARD_ID_SECRET is not set.");
-  const hash = createHmac("sha256", secret).update(printedId).digest("hex");
+  const hash = createHmac("sha256", env.cardIdSecret).update(printedId).digest("hex");
   // Soroban Symbols allow up to 32 characters: "c" + 30 hex characters.
   return "c" + hash.slice(0, 30);
 }
