@@ -2,15 +2,16 @@
 
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { CheckCircle2, ExternalLink, Send } from "lucide-react";
+import { ExternalLink, Send } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Amount } from "@/components/ui/Amount";
+import { Card } from "@/components/ui/Card";
+import { ResultMark } from "@/components/ui/ResultMark";
 import { Row, Rows } from "@/components/ui/Row";
-import { StatusLine } from "@/components/ui/StatusLine";
 import { useMe } from "@/lib/client/sender";
 import { explorerTxUrl } from "@/lib/config";
-import { cad } from "@/lib/format";
+import { cad, usd as fmtUsd } from "@/lib/format";
 import { s } from "@/strings/sender.en";
 
 function Done() {
@@ -26,26 +27,31 @@ function Done() {
 
   return (
     <Screen
+      mark={<ResultMark kind={kind === "sent" ? "wait" : "ok"} />}
       title={kind === "sent" ? s.done.sentTitle : s.done.pickupTitle(name)}
       action={
         <>
-          <Button href="/app/send" icon={Send}>
+          <Button href="/app/send" variant="secondary" icon={Send}>
             {s.done.more}
           </Button>
-          <Button href="/app" variant="secondary">
+          <Button href="/app" variant="ghost">
             {s.nav.home}
           </Button>
         </>
       }
     >
-      <StatusLine icon={CheckCircle2}>{kind === "sent" ? s.done.sentLead(name) : s.done.pickupLead}</StatusLine>
-      <Amount value={usd} currency="USD" />
-      <Rows>
-        <Row label={s.done.amount} value={`US$${usd.toFixed(2)}`} />
-        {kind === "sent" && cadAmount ? <Row label={s.send.youSend} value={cad(cadAmount)} /> : null}
-      </Rows>
+      <p className="muted">{kind === "sent" ? s.done.sentLead(name) : s.done.pickupLead}</p>
+      <Card variant="receipt">
+        <Amount value={usd} currency="USD" small center reveal />
+        <hr className="divider" />
+        <Rows plain>
+          {r ? <Row label={s.done.to} value={r.name} /> : null}
+          {kind === "sent" && cadAmount ? <Row label={s.send.youSend} value={cad(cadAmount)} /> : null}
+          {r?.card ? <Row label={s.done.leftOnCard} value={fmtUsd(r.card.availableUsd)} /> : null}
+        </Rows>
+      </Card>
       {tx && /^[0-9a-f]{64}$/.test(tx) ? (
-        <a className="nav-link" href={explorerTxUrl(tx)} target="_blank" rel="noreferrer">
+        <a className="ext-link" href={explorerTxUrl(tx)} target="_blank" rel="noreferrer">
           <ExternalLink className="icon" aria-hidden />
           <span>{s.done.receipt}</span>
         </a>

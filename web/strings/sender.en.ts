@@ -43,6 +43,7 @@ export const s = {
     blocked: "This name matches the screening list, so we cannot continue.",
   },
   home: {
+    greeting: (first: string | null) => (first ? `Hi ${first}` : "Hi"),
     title: "Your family",
     recipients: "Who you send to",
     none: "You have not added anyone yet.",
@@ -51,6 +52,9 @@ export const s = {
     send: "Send money",
     add: "Add a person",
     balanceLine: (usd: string) => `Available now: US$${usd}`,
+    cardLine: (commune: string, cardId: string) => `${commune} · card ${cardId}`,
+    noCard: "No card yet",
+    availableShort: "Available",
     approveAlert: (name: string) => `A shop is asking to activate ${name}'s card.`,
     approveAction: "Review request",
     holdAlert: (name: string) => `Please call ${name}.`,
@@ -112,6 +116,10 @@ export const s = {
     youSend: "You send",
     fee: "Our fee",
     rate: "Demo rate (after our 2.2% charge)",
+    rateLabel: "Rate",
+    rateValue: (rate: string) => `1 CAD = ${rate} USD (demo rate)`,
+    heldFor: "Rate held for",
+    heldValue: (n: number) => `${n} seconds`,
     allIn: "Total cost",
     sheGets: "She gets",
     expiresIn: (s: number) => `This quote is good for ${s} more seconds.`,
@@ -140,9 +148,10 @@ export const s = {
     pickupTitle: (name: string) => `${name} has the money`,
     pickupLead: "She collected it at a shop.",
     amount: "Amount",
+    leftOnCard: "Left on card",
+    to: "To",
     receipt: "View receipt",
     more: "Send more",
-
   },
   alert: {
     title: (name: string) => `Please call ${name}`,
@@ -154,6 +163,7 @@ export const s = {
     title: "Inbox",
     lead: "Simulated text messages and replies, newest first.",
     empty: "No messages yet.",
+    replyFrom: (name: string) => `From ${name}`,
   },
   time: { justNow: "Just now" },
 } as const;

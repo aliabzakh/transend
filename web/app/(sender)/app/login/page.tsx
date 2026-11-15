@@ -43,11 +43,11 @@ export default function LoginPage() {
       }}
       action={
         <>
-          <Button type="submit" icon={mode === "signup" ? UserPlus : LogIn} disabled={busy}>
+          <Button type="submit" icon={mode === "signup" ? UserPlus : LogIn} busy={busy}>
             {mode === "signup" ? s.auth.create : s.auth.login}
           </Button>
           <Button
-            variant="secondary"
+            variant="ghost"
             onClick={() => {
               setError(null);
               setMode(mode === "signup" ? "login" : "signup");
@@ -59,13 +59,13 @@ export default function LoginPage() {
         </>
       }
     >
-      <p className="lead">{s.auth.lead}</p>
+      <p className="muted">{s.auth.lead}</p>
       {error ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{error}</StatusLine>
         </div>
       ) : null}
-      {busy && mode === "signup" ? <p className="muted">{s.auth.working}</p> : null}
+      {busy && mode === "signup" ? <p className="helper">{s.auth.working}</p> : null}
       <Input name="email" label={s.auth.email} type="email" autoComplete="email" required />
       <Input
         name="password"
@@ -75,7 +75,7 @@ export default function LoginPage() {
         minLength={8}
         required
       />
-      {mode === "login" ? <p className="muted small">{s.auth.demo}</p> : null}
+      {mode === "login" ? <p className="helper">{s.auth.demo}</p> : null}
     </Screen>
   );
 }

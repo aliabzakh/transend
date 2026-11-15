@@ -2,17 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { RefreshCw, Send, Timer, XCircle } from "lucide-react";
+import { RefreshCw, Send, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
-import { Input, Select } from "@/components/ui/Input";
-import { Amount } from "@/components/ui/Amount";
-import { Row, Rows } from "@/components/ui/Row";
+import { AmountInput, Select } from "@/components/ui/Input";
+import { Card } from "@/components/ui/Card";
+import { Avatar } from "@/components/ui/Avatar";
+import { Meter } from "@/components/ui/Meter";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { Row } from "@/components/ui/Row";
 import { StatusLine } from "@/components/ui/StatusLine";
 import { getQuote, send, useMe, type LiveQuote } from "@/lib/client/sender";
 import { ApiError } from "@/lib/client/api";
-import { cad } from "@/lib/format";
+import { cad, usd } from "@/lib/format";
 import { s } from "@/strings/sender.en";
+
+/** How long a quote holds, for the countdown bar. The words beside it come from the API's expiry. */
+const QUOTE_SECONDS = 30;
 
 const sendError = (e: unknown) => {
   const reason = e instanceof ApiError ? e.reason : "server_error";
@@ -58,7 +64,8 @@ export default function SendPage() {
   if (!me) {
     return (
       <Screen title={s.send.title} back={{ href: "/app", label: s.back }}>
-        <p className="muted">{s.loading}</p>
+        <Skeleton label={s.loading} />
+        <Skeleton kind="tall" />
       </Screen>
     );
   }
@@ -66,7 +73,7 @@ export default function SendPage() {
   if (!chosen?.card) {
     return (
       <Screen title={s.send.title} back={{ href: "/app", label: s.back }}>
-        <p>{s.send.noCard}</p>
+        <p className="muted">{s.send.noCard}</p>
       </Screen>
     );
   }
@@ -81,7 +88,7 @@ export default function SendPage() {
           fetchQuote();
         }}
         action={
-          <Button type="submit" disabled={busy}>
+          <Button type="submit" busy={busy}>
             {s.send.getQuote}
           </Button>
         }
@@ -95,19 +102,18 @@ export default function SendPage() {
             ))}
           </Select>
         ) : (
-          <p className="lead">
-            {s.send.to} <strong>{chosen.name}</strong>
-          </p>
+          <RecipientCard name={chosen.name} commune={chosen.commune} cardId={chosen.card.id} />
         )}
-        <Input
+        <AmountInput
           label={s.send.amount}
           hint={s.send.amountHint}
+          prefix="C$"
           inputMode="decimal"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
         {error ? (
-          <div className="notice">
+          <div className="notice notice-error">
             <StatusLine icon={XCircle}>{error}</StatusLine>
           </div>
         ) : null}
@@ -122,13 +128,13 @@ export default function SendPage() {
       action={
         <>
           {expired ? (
-            <Button icon={RefreshCw} onClick={fetchQuote} disabled={busy}>
+            <Button icon={RefreshCw} onClick={fetchQuote} busy={busy}>
               {s.send.newQuote}
             </Button>
           ) : (
             <Button
               icon={Send}
-              disabled={busy}
+              busy={busy}
               onClick={async () => {
                 setBusy(true);
                 setError(null);
@@ -146,35 +152,55 @@ export default function SendPage() {
               {busy ? s.send.sending : s.send.confirm(chosen.name.split(" ")[0])}
             </Button>
           )}
-          <Button variant="secondary" onClick={() => setLive(null)} disabled={busy}>
+          <Button variant="ghost" onClick={() => setLive(null)} disabled={busy}>
             {s.send.changeAmount}
           </Button>
         </>
       }
     >
-      <div>
-        <div className="muted">{s.send.sheGets}</div>
-        <Amount value={live.usdOut} currency="USD" />
+      <RecipientCard name={chosen.name} commune={chosen.commune} cardId={chosen.card.id} />
+      <div className="center">
+        <p className="muted small">{s.send.youSend}</p>
+        <p className="amount amount-center">
+          <span className="amount-code">C$</span>
+          <span>{live.amountCad.toFixed(2)}</span>
+        </p>
       </div>
-      <Rows>
-        <Row label={s.send.youSend} value={cad(live.amountCad)} />
+      <Card label={s.send.quoteTitle}>
+        <Row label={s.send.sheGets} value={<span className="strong">{usd(live.usdOut)}</span>} />
         <Row label={s.send.fee} value={cad(live.feeCad)} />
-        <Row label={s.send.rate} value={live.rate.toFixed(4)} />
+        <Row label={s.send.rateLabel} value={s.send.rateValue(live.rate.toFixed(4))} />
         <Row label={s.send.allIn} value={`${live.allInPct.toFixed(3)}%`} />
-      </Rows>
-      <p className="muted small">{s.send.demoRateNote}</p>
+        <hr className="divider" />
+        <div className="countdown stack-sm" role="timer" aria-live="off">
+          <Row label={s.send.heldFor} value={expired ? s.send.expired : s.send.heldValue(left)} />
+          <Meter value={left} max={QUOTE_SECONDS} countdown />
+        </div>
+      </Card>
+      <p className="helper center">{s.send.demoRateNote}</p>
       {error ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{error}</StatusLine>
         </div>
       ) : null}
       {expired ? (
-        <div className="notice">
+        <div className="notice notice-error">
           <StatusLine icon={XCircle}>{s.send.expired}</StatusLine>
         </div>
-      ) : (
-        <StatusLine icon={Timer}>{s.send.expiresIn(left)}</StatusLine>
-      )}
+      ) : null}
     </Screen>
+  );
+}
+
+/** The person being paid: Gold initial, name, commune and card ID in full. */
+function RecipientCard({ name, commune, cardId }: { name: string; commune: string; cardId: string }) {
+  return (
+    <Card variant="row">
+      <Avatar name={name} />
+      <div className="card-grow">
+        <p className="card-name">{name}</p>
+        <p className="card-sub">{s.home.cardLine(commune, cardId)}</p>
+      </div>
+    </Card>
   );
 }

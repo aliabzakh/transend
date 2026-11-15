@@ -5,13 +5,18 @@ import { useParams } from "next/navigation";
 import { BellRing, CheckCircle2, Clock, ExternalLink, Pause, Play, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import { Avatar } from "@/components/ui/Avatar";
+import { Meter } from "@/components/ui/Meter";
 import { Row, Rows } from "@/components/ui/Row";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusLine } from "@/components/ui/StatusLine";
 import { approveActivation, freezeCard, unfreezeCard, useMe } from "@/lib/client/sender";
 import { ApiError } from "@/lib/client/api";
 import { CONFIG, explorerTxUrl } from "@/lib/config";
-import { usd } from "@/lib/format";
 import { s } from "@/strings/sender.en";
+
+const STATUS_PILL = { Pending: "pill-wait", Active: "pill-ok", Frozen: "pill-warn", Retired: "pill-muted" } as const;
 
 export default function CardPage() {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +29,8 @@ export default function CardPage() {
   if (!me) {
     return (
       <Screen title="Card" back={{ href: "/app", label: s.back }}>
-        <p className="muted">{s.loading}</p>
+        <Skeleton label={s.loading} />
+        <Skeleton kind="tall" />
       </Screen>
     );
   }
@@ -33,7 +39,9 @@ export default function CardPage() {
   if (!card || !r) {
     return (
       <Screen title="Card" back={{ href: "/app", label: s.back }}>
-        <p>{s.errors.not_found}</p>
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{s.errors.not_found}</StatusLine>
+        </div>
       </Screen>
     );
   }
@@ -52,24 +60,22 @@ export default function CardPage() {
     setBusy(false);
   };
 
-  const statusIcon = card.status === "Active" ? CheckCircle2 : card.status === "Frozen" ? Pause : Clock;
-
   let action = null;
   if (card.activationRequested) {
     action = (
-      <Button icon={CheckCircle2} onClick={run(approveActivation)} disabled={busy}>
+      <Button icon={CheckCircle2} onClick={run(approveActivation)} busy={busy}>
         {s.card.approve}
       </Button>
     );
   } else if (card.status === "Active") {
     action = (
-      <Button variant="secondary" icon={Pause} onClick={run(freezeCard)} disabled={busy}>
+      <Button variant="danger" icon={Pause} onClick={run(freezeCard)} busy={busy}>
         {s.card.freeze}
       </Button>
     );
   } else if (card.status === "Frozen") {
     action = (
-      <Button icon={Play} onClick={run(unfreezeCard)} disabled={busy}>
+      <Button icon={Play} onClick={run(unfreezeCard)} busy={busy}>
         {s.card.unfreeze}
       </Button>
     );
@@ -80,26 +86,53 @@ export default function CardPage() {
       {card.activationRequested ? (
         <div className="notice">
           <StatusLine icon={BellRing}>{s.card.approveLead(r.name)}</StatusLine>
-          {card.activationShop ? <p className="muted">{s.card.askedBy(card.activationShop)}</p> : null}
+          {card.activationShop ? <p className="muted small">{s.card.askedBy(card.activationShop)}</p> : null}
         </div>
       ) : null}
-      {card.status === "Pending" && !card.activationRequested ? <p className="muted">{s.card.waiting}</p> : null}
-      {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
 
-      <StatusLine icon={statusIcon}>{s.card.statusText[card.status]}</StatusLine>
+      <Card>
+        <div className="inline">
+          <Avatar name={r.name} />
+          <div className="card-grow">
+            <p className="card-name">{r.name}</p>
+            <p className="card-sub">{s.home.cardLine(r.commune, card.id)}</p>
+          </div>
+          <span className={`pill ${STATUS_PILL[card.status]}`}>{s.card.statusText[card.status]}</span>
+        </div>
+        <hr className="divider" />
+        <div className="center">
+          <p className="muted small">{s.card.available}</p>
+          <p className="amount amount-sm amount-center">
+            <span className="amount-code">US$</span>
+            <span>{card.availableUsd.toFixed(2)}</span>
+          </p>
+        </div>
+      </Card>
+
+      {card.status === "Pending" && !card.activationRequested ? (
+        <StatusLine icon={Clock} tone="info">
+          {s.card.waiting}
+        </StatusLine>
+      ) : null}
+
       <Rows>
         <Row label={s.card.id} value={<span className="mono">{card.id}</span>} />
         <Row label={s.card.lines} value={s.card.linesValue(card.linesUsed, CONFIG.linesPerCard)} />
-        <Row label={s.card.available} value={usd(card.availableUsd)} />
+        <Meter value={card.linesUsed} max={CONFIG.linesPerCard} />
       </Rows>
 
       {tx ? (
-        <a className="nav-link" href={explorerTxUrl(tx)} target="_blank" rel="noreferrer">
+        <a className="ext-link" href={explorerTxUrl(tx)} target="_blank" rel="noreferrer">
           <ExternalLink className="icon" aria-hidden />
           <span>{s.receipt}</span>
         </a>
       ) : null}
-      <p className="muted small">{s.card.downloadedOnce}</p>
+      <p className="helper">{s.card.downloadedOnce}</p>
     </Screen>
   );
 }

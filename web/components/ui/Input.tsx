@@ -75,6 +75,8 @@ export function AmountInput({
         <input
           id={fieldId}
           className="input-amount"
+          // Size the field to its digits so the figure stays centred beside its code.
+          style={{ width: `${Math.max(2, String(rest.value ?? "").length) + 0.5}ch` }}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy(fieldId, hint, error)}
           {...rest}
