@@ -5,7 +5,7 @@ import { balanceForShop } from "@/lib/server/verify";
 
 export const maxDuration = 60;
 
-/** Card ID + PIN: the amount she can collect now. Never the amount set aside. */
+/** Card ID + PIN: the amount she can collect now. */
 export const POST = route(async (req) => {
   await requireShop();
   const { cardId, pin } = await body<{ cardId: string; pin: string }>(req);

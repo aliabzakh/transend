@@ -78,13 +78,13 @@ export default async function AdminCashPage() {
               </tr>
             </thead>
             <tbody>
-              {f.days.map((d, i) => (
+              {f.days.map((d) => (
                 <tr key={d.day}>
                   <th scope="row">{label(d.day)}</th>
                   <td className="num">US${d.p10.toFixed(0)}</td>
                   <td className="num">US${d.p50.toFixed(0)}</td>
                   <td className="num">US${d.p90.toFixed(0)}</td>
-                  <td className="mono small">{f.restock[i]?.windows.join(", ")}</td>
+                  <td className="mono small">{f.restock.find((r) => r.day === d.day)?.windows.join(", ") ?? "—"}</td>
                 </tr>
               ))}
             </tbody>

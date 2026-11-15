@@ -26,7 +26,7 @@ export type ForecastInput = {
   /** Daily payouts, oldest first, ending yesterday. */
   history: DayPoint[];
   today: Date;
-  /** Liquid money waiting on nearby cards. Money set aside in Savings must not be included. */
+  /** Money waiting on nearby cards. */
   waitingUsd: number;
   tense: boolean;
   /** Senders who usually top up within the coming week. */
@@ -49,9 +49,9 @@ export function chooseForecaster(mode: Forecaster, model: ForecastModel | null |
   return model.metrics.chosen && model.metrics.improvementPct >= 10 ? "model" : "rules";
 }
 
-/** Money waiting to be collected: liquid balances only. Set-aside (Savings) money cannot be collected. */
-export function waitingBalanceUsd(cards: { balanceUsd: number; stakedUsd: number }[]): number {
-  return r2(cards.reduce((sum, c) => sum + Math.max(0, c.balanceUsd - c.stakedUsd), 0));
+/** Money waiting to be collected: the sum of the card balances. */
+export function waitingBalanceUsd(cards: { balanceUsd: number }[]): number {
+  return r2(cards.reduce((sum, c) => sum + Math.max(0, c.balanceUsd), 0));
 }
 
 /** clamp(p90 x 1.1, floor, hard cap), in C$. */
@@ -132,7 +132,8 @@ function predictDay(
     const q = [scoreQuantile(model.quantiles.p10, x), scoreQuantile(model.quantiles.p50, x), scoreQuantile(model.quantiles.p90, x)]
       .map((v) => Math.max(0, v))
       .sort((a, b) => a - b);
-    return { p10: q[0], p50: q[1], p90: q[2] };
+    const k = model.calibration?.bandScale ?? 1;
+    return { p10: Math.max(0, q[1] - k * (q[1] - q[0])), p50: q[1], p90: q[1] + k * (q[2] - q[1]) };
   }
   const p50 = Math.max(baselineP50(day, past, input.tense), input.waitingUsd * 0.1 / 7);
   return { p10: p50 * spread.lo, p50, p90: p50 * spread.hi };
