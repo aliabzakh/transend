@@ -5,6 +5,7 @@
   "description": "Transend MVP: repo-level scripts (deploy, seed, forecast training). The app lives in web/.",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
+    "cards:template": "tsx scripts/cards/build-template.ts",
     "deploy:testnet": "tsx scripts/deploy-testnet.ts",
     "seed:demo": "cd web && tsx --tsconfig tsconfig.json ../scripts/seed-demo.ts",
     "ml:export": "cd web && tsx --tsconfig tsconfig.json ../scripts/ml/export-samples.ts",

@@ -6,7 +6,7 @@ import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { createSponsoredAccount, issueDemoUsdc } from "../stellar/accounts";
-import { cardsPdf } from "../cards/pdf";
+import { cardsPdf, type CardLayout } from "../cards/pdf";
 import type { CardSecrets } from "../cards/generate";
 import { encryptSecret } from "./secrets";
 import { DEMO_WALLET_USD } from "./senders";
@@ -72,11 +72,15 @@ export async function ensureSender(email: string, name: string) {
 const PRINT_NAMES = ["Rose", "Marthe", "Nadège", "Yvette", "Lucienne", "Mireille", "Solange", "Clotilde"];
 
 /**
- * Makes `n` printable demo cards and returns one PDF with all of them. The contract
+ * Makes `n` printable demo cards and returns one PDF with all of them: by default one
+ * Letter sheet per card to cut and fold, or "a6" for front and back A6 pages. The contract
  * allows 3 cards per sender, so the cards are spread over demo senders
  * print-1@transend.demo, print-2@... (password DEMO_PASSWORD), 3 cards each.
  */
-export async function bulkDemoCards(n: number): Promise<{ pdf: Uint8Array; cardIds: string[] }> {
+export async function bulkDemoCards(
+  n: number,
+  layout: CardLayout = "sheet",
+): Promise<{ pdf: Uint8Array; cardIds: string[] }> {
   const count = Math.max(1, Math.min(30, Math.floor(n)));
   // Find senders with free card slots, then create more as needed (one at a time: the sponsor signs each).
   const plan: { user: typeof schema.users.$inferSelect; slots: number }[] = [];
@@ -109,5 +113,5 @@ export async function bulkDemoCards(n: number): Promise<{ pdf: Uint8Array; cardI
     }),
   );
   const cards = results.flat();
-  return { pdf: await cardsPdf(cards), cardIds: cards.map((c) => c.cardId) };
+  return { pdf: await cardsPdf(cards, layout), cardIds: cards.map((c) => c.cardId) };
 }
