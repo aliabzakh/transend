@@ -515,7 +515,7 @@ add("20-why-stellar", 14.6, 6.5, "solid", frame(
     "Architecture · on-chain vs off-chain",
     f'The contract holds the money. <span style="color:{LEAF}">Our API never does.</span>',
     f"""<div class="row" style="margin-top:34px;gap:18px;align-items:flex-start">
-  {acol("People", abox("Sender app", "quote, send, Savings") + abox("Shop app", "code + her PIN"), 330)}
+  {acol("People", abox("Sender app", "quote, send") + abox("Shop app", "code + her PIN"), 330)}
   {ARROW}
   {acol("Our API", abox("Verification", "PIN, area risk, cash ceiling", True) + abox("Fee sponsor", "nobody holds XLM"), 380)}
   {ARROW}
