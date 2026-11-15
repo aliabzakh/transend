@@ -26,7 +26,7 @@ export type ForecastInput = {
   /** Daily payouts, oldest first, ending yesterday. */
   history: DayPoint[];
   today: Date;
-  /** Liquid money waiting on nearby cards. Money set aside in Savings must not be included. */
+  /** Money waiting on nearby cards. */
   waitingUsd: number;
   tense: boolean;
   /** Senders who usually top up within the coming week. */
@@ -49,9 +49,9 @@ export function chooseForecaster(mode: Forecaster, model: ForecastModel | null |
   return model.metrics.chosen && model.metrics.improvementPct >= 10 ? "model" : "rules";
 }
 
-/** Money waiting to be collected: liquid balances only. Set-aside (Savings) money cannot be collected. */
-export function waitingBalanceUsd(cards: { balanceUsd: number; stakedUsd: number }[]): number {
-  return r2(cards.reduce((sum, c) => sum + Math.max(0, c.balanceUsd - c.stakedUsd), 0));
+/** Money waiting to be collected: the sum of the card balances. */
+export function waitingBalanceUsd(cards: { balanceUsd: number }[]): number {
+  return r2(cards.reduce((sum, c) => sum + Math.max(0, c.balanceUsd), 0));
 }
 
 /** clamp(p90 x 1.1, floor, hard cap), in C$. */

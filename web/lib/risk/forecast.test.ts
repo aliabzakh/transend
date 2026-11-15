@@ -117,11 +117,11 @@ describe("restock windows", () => {
 });
 
 describe("waiting balances", () => {
-  it("exclude money set aside in Savings", () => {
+  it("add up the card balances", () => {
     expect(
       waitingBalanceUsd([
-        { balanceUsd: 300, stakedUsd: 200 },
-        { balanceUsd: 137.39, stakedUsd: 0 },
+        { balanceUsd: 100 },
+        { balanceUsd: 137.39 },
       ]),
     ).toBe(237.39);
   });

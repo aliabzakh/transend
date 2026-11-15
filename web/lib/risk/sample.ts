@@ -74,7 +74,7 @@ export function sampleHistory(shopId: string, end: Date, days = 60): SampleDay[]
 }
 
 /**
- * Synthetic "liquid money waiting on nearby cards" for a sample shop on `day`: about a
+ * Synthetic "money waiting on nearby cards" for a sample shop on `day`: about a
  * week of payouts, more after the monthly top-ups. Used for training and for the
  * simulated shops on /ops; real shops use the live card balances instead.
  */

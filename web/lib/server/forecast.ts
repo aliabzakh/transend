@@ -1,6 +1,6 @@
 /**
  * Feeds the forecast with data and stores its results. Inputs are numbers only:
- * daily payouts (synthetic sample data plus real redeems), liquid money waiting on
+ * daily payouts (synthetic sample data plus real redeems), money waiting on
  * nearby cards, how many senders are due to top up, the calendar and the area status.
  * No names, relationships or demographic features.
  */
@@ -51,7 +51,7 @@ export async function historyFor(shopId: string, days = 60): Promise<DayPoint[]>
   return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
-/** Liquid money waiting on active cards whose recipient lives in the shop's commune. */
+/** Money waiting on active cards whose recipient lives in the shop's commune. */
 async function waitingNear(shop: Shop, communeName: string): Promise<number> {
   const rows = await db
     .select({ id: schema.cards.id })
@@ -59,7 +59,7 @@ async function waitingNear(shop: Shop, communeName: string): Promise<number> {
     .innerJoin(schema.recipients, eq(schema.cards.recipientId, schema.recipients.id))
     .where(and(eq(schema.cards.status, "Active"), sql`lower(${schema.recipients.commune}) = lower(${communeName})`));
   const cards = await Promise.all(rows.map((r) => escrow.getCard(r.id).catch(() => null)));
-  return waitingBalanceUsd(cards.filter((c) => c !== null).map((c) => ({ balanceUsd: c!.balanceUsd, stakedUsd: c!.stakedUsd })));
+  return waitingBalanceUsd(cards.filter((c) => c !== null).map((c) => ({ balanceUsd: c!.balanceUsd })));
 }
 
 /** Senders who topped up 28 to 35 days ago: on a monthly cadence they are due this week. */

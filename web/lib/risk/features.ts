@@ -35,7 +35,7 @@ export function peakFactor(d: Date): { factor: number; reason: string | null } {
 
 /**
  * Features for `day`, given the payouts before it (oldest first). `waitingUsd` is the
- * liquid money waiting on nearby cards (set-aside money excluded) and `tense` the
+ * money waiting on nearby cards and `tense` the
  * area status known at forecast time.
  */
 export function featuresFor(day: Date, past: number[], waitingUsd: number, tense: boolean): number[] {
