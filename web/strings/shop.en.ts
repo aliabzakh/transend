@@ -25,9 +25,10 @@ export const s = {
     balance: "Check balance",
     message: "Send a message",
     cashToday: "Paid out today",
+    cashOf: (paid: string, ceiling: string) => `US$${paid} of US$${ceiling}`,
     ceiling: (paid: string, ceiling: string) => `Paid out today: US$${paid} of US$${ceiling}`,
     logOut: "Log out",
-    areaError: "Could not save. Try again."
+    areaError: "Could not save. Try again.",
   },
   activate: {
     title: "Activate card",
@@ -40,6 +41,7 @@ export const s = {
     approved: "The sender said yes.",
     handOver: "Hand the phone to your customer",
     pinTitle: "Choose a PIN",
+    pinStep: (n: number) => `Step ${n} of 2`,
     pin1: "Enter a 4-digit PIN",
     pin1Again: "Enter the same PIN again",
     mismatch: "The two PINs did not match. Start again.",
@@ -73,6 +75,7 @@ export const s = {
     lead: "She enters her PIN. Do not look.",
     approving: (usd: string) => `Pay out US$${usd}`,
     cardLine: (line: number) => `Card line ${line}`,
+    cardLineReady: (line: number) => `Card line ${line} · ready`,
     working: "Checking...",
     helper: "Keys move every time. The PIN never leaves this phone except to check it.",
     submit: "Done",

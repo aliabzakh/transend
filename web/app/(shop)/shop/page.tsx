@@ -1,14 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Banknote, CreditCard, MessageSquare, Scale, WifiOff, XCircle } from "lucide-react";
+import { Ban, Banknote, CreditCard, MessageSquare, Scale, ShieldAlert, ShieldCheck, WifiOff, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
+import { Meter } from "@/components/ui/Meter";
+import { Row } from "@/components/ui/Row";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { StatusLine } from "@/components/ui/StatusLine";
 import { setArea, useShop, type AreaStatus } from "@/lib/client/shop";
 import { s } from "@/strings/shop.en";
 
 const AREAS: AreaStatus[] = ["calm", "tense", "closed"];
+const AREA_ICON = { calm: ShieldCheck, tense: ShieldAlert, closed: Ban } as const;
 
 export default function ShopHome() {
   const { view, offline, refresh, setView } = useShop();
@@ -17,7 +21,17 @@ export default function ShopHome() {
   if (!view) {
     return (
       <Screen title={s.home.title}>
-        {offline ? <StatusLine icon={WifiOff}>{s.signal}</StatusLine> : null}
+        {offline ? (
+          <div className="notice notice-error">
+            <StatusLine icon={WifiOff}>{s.signal}</StatusLine>
+          </div>
+        ) : (
+          <>
+            <Skeleton />
+            <Skeleton kind="tall" />
+            <Skeleton />
+          </>
+        )}
       </Screen>
     );
   }
@@ -36,21 +50,42 @@ export default function ShopHome() {
   };
 
   return (
-    <Screen title={view.shop.name}>
-      {offline ? <StatusLine icon={WifiOff}>{s.signal}</StatusLine> : null}
-      <section className="stack" aria-labelledby="area-h">
-        <h2 id="area-h" className="section-title">
+    <Screen eyebrow={s.home.title} title={view.shop.name}>
+      {offline ? (
+        <div className="notice notice-error">
+          <StatusLine icon={WifiOff}>{s.signal}</StatusLine>
+        </div>
+      ) : null}
+      <section className="stack-sm" aria-labelledby="area-h">
+        <h2 id="area-h" className="section-label">
           {s.home.area}
         </h2>
         <div className="segmented" role="group" aria-labelledby="area-h">
-          {AREAS.map((a) => (
-            <button key={a} type="button" className="seg" aria-pressed={view.area.status === a} onClick={() => choose(a)}>
-              {s.home.areaStatus[a]}
-            </button>
-          ))}
+          {AREAS.map((a) => {
+            const Icon = AREA_ICON[a];
+            return (
+              <button
+                key={a}
+                type="button"
+                className="seg"
+                data-tone={a}
+                aria-pressed={view.area.status === a}
+                onClick={() => choose(a)}
+              >
+                <Icon className="icon" aria-hidden />
+                {s.home.areaStatus[a]}
+              </button>
+            );
+          })}
         </div>
-        <p className="muted">{s.home.areaHint[view.area.status]}</p>
-        {error ? <StatusLine icon={XCircle}>{s.home.areaError}</StatusLine> : null}
+        <p className="helper" aria-live="polite">
+          {s.home.areaHint[view.area.status]}
+        </p>
+        {error ? (
+          <div className="notice notice-error">
+            <StatusLine icon={XCircle}>{s.home.areaError}</StatusLine>
+          </div>
+        ) : null}
       </section>
 
       <div className="stack">
@@ -63,14 +98,18 @@ export default function ShopHome() {
         <Button big variant="secondary" href="/shop/balance" icon={Scale}>
           {s.home.balance}
         </Button>
-        <Button variant="secondary" href="/shop/message" icon={MessageSquare}>
+        <Button variant="ghost" href="/shop/message" icon={MessageSquare}>
           {s.home.message}
         </Button>
       </div>
 
-      <p className="muted small">
-        {s.home.ceiling(view.cashPaidTodayUsd.toFixed(2), view.ceilingUsd.toFixed(2))}
-      </p>
+      <div className="card card-tight">
+        <Row
+          label={s.home.cashToday}
+          value={s.home.cashOf(view.cashPaidTodayUsd.toFixed(2), view.ceilingUsd.toFixed(2))}
+        />
+        <Meter value={view.cashPaidTodayUsd} max={view.ceilingUsd} />
+      </div>
     </Screen>
   );
 }

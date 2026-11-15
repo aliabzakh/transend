@@ -2,9 +2,10 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, XCircle } from "lucide-react";
+import { RotateCcw, WifiOff } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
+import { ResultMark } from "@/components/ui/ResultMark";
 import { StatusLine } from "@/components/ui/StatusLine";
 import { getLastResult } from "@/lib/client/shop";
 import { s } from "@/strings/shop.en";
@@ -21,23 +22,29 @@ export default function DeclinedPage() {
   const reason = s.declined.reasons[r.reason];
   return (
     <Screen
+      mark={<ResultMark kind="fail" />}
       title={s.declined.title}
       action={
         <>
           <Button href="/shop/pay" icon={RotateCcw}>
             {s.declined.tryAgain}
           </Button>
-          <Button href="/shop" variant="secondary">
+          <Button href="/shop" variant="ghost">
             {s.home.title}
           </Button>
         </>
       }
     >
-      <StatusLine icon={XCircle}>
-        {s.declined.title}: {reason.why}
-      </StatusLine>
-      <p className="lead">{reason.what}</p>
-      {r.reason === "no_signal" ? <p className="muted">{s.signal}</p> : null}
+      {/* The words carry the meaning; the Clay mark only repeats it. */}
+      <div className="stack-sm" role="status">
+        <p className="result-why">{reason.why}</p>
+        <p className="lead muted">{reason.what}</p>
+      </div>
+      {r.reason === "no_signal" ? (
+        <div className="notice">
+          <StatusLine icon={WifiOff}>{s.signal}</StatusLine>
+        </div>
+      ) : null}
     </Screen>
   );
 }

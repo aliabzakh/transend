@@ -6,6 +6,7 @@ import { CheckCircle2, ExternalLink } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Amount } from "@/components/ui/Amount";
+import { ResultMark } from "@/components/ui/ResultMark";
 import { Row, Rows } from "@/components/ui/Row";
 import { StatusLine } from "@/components/ui/StatusLine";
 import { getLastResult, setPending } from "@/lib/client/shop";
@@ -23,6 +24,7 @@ export default function ApprovedPage() {
 
   return (
     <Screen
+      mark={<ResultMark kind="ok" />}
       title={s.approved.title}
       action={
         <Button
@@ -35,10 +37,10 @@ export default function ApprovedPage() {
         </Button>
       }
     >
-      <StatusLine icon={CheckCircle2}>{s.approved.title}</StatusLine>
-      <div className="result-big">
-        <p className="lead">{s.approved.pay}</p>
-        <Amount value={r.payUsd} currency="USD" />
+      {/* "Pay US$X", very large: the one thing the shopkeeper must read. */}
+      <div className="result-big" role="status">
+        <p className="result-label">{s.approved.pay}</p>
+        <Amount value={r.payUsd} currency="USD" center reveal />
       </div>
       <Rows>
         <Row label={s.approved.card} value={<span className="mono">{r.cardId}</span>} />
@@ -48,8 +50,10 @@ export default function ApprovedPage() {
           value={new Date(r.at).toLocaleTimeString("en-CA", { hour: "numeric", minute: "2-digit" })}
         />
       </Rows>
-      <p>{s.approved.paidBack}</p>
-      <a className="nav-link" href={explorerTxUrl(r.txHash)} target="_blank" rel="noreferrer">
+      <StatusLine icon={CheckCircle2} tone="ok">
+        {s.approved.paidBack}
+      </StatusLine>
+      <a className="ext-link" href={explorerTxUrl(r.txHash)} target="_blank" rel="noreferrer">
         <ExternalLink className="icon" aria-hidden />
         <span>{s.approved.receipt}</span>
       </a>
