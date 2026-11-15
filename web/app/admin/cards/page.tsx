@@ -18,6 +18,7 @@ export default function AdminCardsPage() {
   return (
     <Screen
       title="Demo cards"
+      wide
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);
@@ -32,12 +33,12 @@ export default function AdminCardsPage() {
         setBusy(false);
       }}
       action={
-        <Button type="submit" icon={FileDown} disabled={busy}>
+        <Button type="submit" icon={FileDown} busy={busy}>
           {busy ? "Making cards on testnet..." : `Make ${count} cards and download the PDF`}
         </Button>
       }
     >
-      <p>
+      <p className="muted">
         Makes a batch of real demo cards on testnet and downloads one print-ready PDF. The codes exist only in that PDF:
         we keep no copy, so print it or save it now. The contract allows 3 cards per sender, so the cards are spread over
         demo senders print-1@transend.demo, print-2@... (demo password). Log in as them to approve activation.
@@ -49,11 +50,15 @@ export default function AdminCardsPage() {
         value={n}
         onChange={(e) => setN(e.target.value)}
       />
-      {error ? <StatusLine icon={XCircle}>{error}</StatusLine> : null}
+      {error ? (
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>{error}</StatusLine>
+        </div>
+      ) : null}
       {made ? (
         <>
-          <StatusLine icon={CheckCircle2}>{`${made.length} cards made. The PDF is downloading.`}</StatusLine>
-          <ul className="list">
+          <StatusLine icon={CheckCircle2} tone="ok">{`${made.length} cards made. The PDF is downloading.`}</StatusLine>
+          <ul className="list list-card">
             {made.map((id, i) => (
               <li key={id} className="list-item">
                 <span className="mono">

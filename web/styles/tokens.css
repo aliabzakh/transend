@@ -136,9 +136,10 @@
 
   /* Charts (admin forecast view) */
   --chart-height: 180px;
-  --chart-band: var(--color-action-wash);
+  --chart-band: rgba(47, 203, 122, 0.3); /* Leaf, flat, strong enough to read beside the history bars */
   --chart-line: var(--color-action);
-  --chart-history: var(--color-ring);
+  --chart-history: var(--color-hint); /* Grey ring failed 3:1 on Canopy (dataviz validator) */
+  --chart-tip-width: 180px;
   --chart-ceiling: var(--color-highlight);
   --chart-grid: var(--color-divider);
 

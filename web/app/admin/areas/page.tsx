@@ -35,6 +35,7 @@ export default function AdminAreasPage() {
   return (
     <Screen
       title="Areas and shops"
+      wide
       onSubmit={async (e) => {
         e.preventDefault();
         setState("saving");
@@ -55,18 +56,19 @@ export default function AdminAreasPage() {
         }
       }}
       action={
-        <Button type="submit" icon={Save} disabled={state === "saving"}>
+        <Button type="submit" icon={Save} busy={state === "saving"}>
           Save
         </Button>
       }
     >
-      <p>
+      <p className="muted">
         Set each area&apos;s risk level and each shop&apos;s daily cash ceiling. &quot;Tense&quot; drops the payout
         limit to US$50 at once; &quot;Closed&quot; stops payouts in that area. The forecast moves a ceiling only between
         C$150 and the hard cap.
       </p>
-      <section className="stack">
+      <section className="card">
         <h2 className="section-title">Area risk level</h2>
+        <div className="grid-2">
         {communes.map((c) => (
           <Select
             key={c.id}
@@ -82,11 +84,12 @@ export default function AdminAreasPage() {
             <option value="closed">Closed: no payouts</option>
           </Select>
         ))}
+        </div>
       </section>
-      <section className="stack">
+      <section className="card">
         <h2 className="section-title">Shop cash ceiling (C$ a day)</h2>
         {shops.map((sh) => (
-          <div key={sh.id} className="stack">
+          <div key={sh.id} className="grid-2">
             <Input
               label={`${sh.name} (${sh.id}): ceiling`}
               inputMode="numeric"
@@ -108,9 +111,15 @@ export default function AdminAreasPage() {
           </div>
         ))}
       </section>
-      {state === "saved" ? <StatusLine icon={CheckCircle2}>Saved.</StatusLine> : null}
+      {state === "saved" ? (
+        <StatusLine icon={CheckCircle2} tone="ok">
+          Saved.
+        </StatusLine>
+      ) : null}
       {state === "error" ? (
-        <StatusLine icon={XCircle}>Could not save. A ceiling must be at least C$150 and not above its cap.</StatusLine>
+        <div className="notice notice-error">
+          <StatusLine icon={XCircle}>Could not save. A ceiling must be at least C$150 and not above its cap.</StatusLine>
+        </div>
       ) : null}
     </Screen>
   );

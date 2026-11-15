@@ -447,11 +447,20 @@ a:hover {
   gap: var(--space-2);
   flex-wrap: wrap;
 }
+.split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+}
 .spread {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--space-2) var(--space-3);
+}
+.spread > * {
+  min-width: 0;
 }
 .section-title {
   font-size: var(--text-lead);
@@ -953,6 +962,14 @@ a.card:hover .btn-chevron {
   color: var(--color-muted);
   font-size: var(--text-label);
 }
+/* Label above value, for long IDs (judges' page) */
+.rows-stack .row {
+  flex-direction: column;
+  gap: var(--space-1);
+}
+.rows-stack .row-value {
+  text-align: left;
+}
 .row-value {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1452,6 +1469,44 @@ a.card:hover .btn-chevron {
   display: block;
   overflow: visible;
 }
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+.chart:focus-visible {
+  outline: var(--focus-width) solid var(--focus-color);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-input);
+}
+.chart-cross {
+  stroke: var(--color-fg);
+  stroke-width: 1;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.chart-tip {
+  position: absolute;
+  top: 0;
+  width: var(--chart-tip-width);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-input);
+  background: var(--color-bg);
+  border: var(--border) solid var(--color-line);
+  font-size: var(--text-caption);
+  pointer-events: none;
+  animation: fade-in var(--dur-fast) var(--ease-out) both;
+}
+.chart-tip strong {
+  font-size: var(--text-value);
+  font-variant-numeric: tabular-nums;
+}
+.chart-tip-day {
+  color: var(--color-muted);
+  font-weight: var(--weight-medium);
+}
+.chart-tip-restock {
+  color: var(--color-highlight);
+}
 .chart-band {
   fill: var(--chart-band);
 }
@@ -1862,4 +1917,35 @@ a.card:hover .btn-chevron {
   .screen-head {
     animation: none;
   }
+}
+
+/* ---------- Disclosure (show the numbers) ---------- */
+.disclosure > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  cursor: pointer;
+  color: var(--color-action);
+  font-size: var(--text-value);
+  font-weight: var(--weight-medium);
+  list-style: none;
+}
+.disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+.disclosure > summary::before {
+  content: "";
+  width: var(--space-2);
+  height: var(--space-2);
+  border-right: var(--focus-width) solid currentColor;
+  border-bottom: var(--focus-width) solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.disclosure[open] > summary::before {
+  transform: rotate(45deg);
+}
+.disclosure[open] > .table-wrap {
+  animation: rise-in var(--dur-base) var(--ease-out) both;
 }
