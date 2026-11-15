@@ -18,7 +18,7 @@ export const CONFIG = {
   ceilingHardCapCad: 1000,
   maxWrongPins: 5,
   // Public, non-secret: the deployed escrow on Stellar testnet.
-  contractId: "CA5VT3QZNJXHWKRWTODIQUANZG2LERIPZNPYXNQWKKL3NTTMHCODBMIT",
+  contractId: "CCNJKUOENNFTJO7MUJS6FXDD74KHURJMO5S3JMVPVX3GOWDZ4ZFJS5DO",
 } as const;
 
 export const OPEN_DEPARTMENTS = ["Nord-Ouest", "Nord", "Sud"] as const;

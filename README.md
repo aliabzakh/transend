@@ -5,7 +5,7 @@ Remittance from Canada to Haiti for recipients with no bank account and no smart
 > **Testnet demo. No real money.**
 
 <!-- CONTRACT_ID -->
-**Contract ID (testnet):** [`CA5VT3QZNJXHWKRWTODIQUANZG2LERIPZNPYXNQWKKL3NTTMHCODBMIT`](https://stellar.expert/explorer/testnet/contract/CA5VT3QZNJXHWKRWTODIQUANZG2LERIPZNPYXNQWKKL3NTTMHCODBMIT)
+**Contract ID (testnet):** [`CCNJKUOENNFTJO7MUJS6FXDD74KHURJMO5S3JMVPVX3GOWDZ4ZFJS5DO`](https://stellar.expert/explorer/testnet/contract/CCNJKUOENNFTJO7MUJS6FXDD74KHURJMO5S3JMVPVX3GOWDZ4ZFJS5DO)
 <!-- /CONTRACT_ID -->
 
 ## Status
