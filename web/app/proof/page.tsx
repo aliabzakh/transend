@@ -1,12 +1,10 @@
 import { Screen } from "@/components/ui/Screen";
-import { CONFIG } from "@/lib/config";
+import { CONFIG, explorerContractUrl, explorerTxUrl } from "@/lib/config";
 import { fetchRecentEvents } from "@/lib/stellar-read";
 import { getSavings, type ChainSavings } from "@/lib/stellar/escrow";
 
 // Public, no login. Reads the live contract on every request.
 export const dynamic = "force-dynamic";
-
-const EXPLORER = "https://stellar.expert/explorer/testnet";
 
 export default async function ProofPage() {
   const contractId = process.env.CONTRACT_ID || CONFIG.contractId;
@@ -31,7 +29,7 @@ export default async function ProofPage() {
           <tr>
             <th scope="row">Contract ID</th>
             <td>
-              <a href={`${EXPLORER}/contract/${contractId}`} target="_blank" rel="noreferrer" className="mono wrap">
+              <a href={explorerContractUrl(contractId)} target="_blank" rel="noreferrer" className="mono wrap">
                 {contractId}
               </a>
             </td>
@@ -94,7 +92,7 @@ export default async function ProofPage() {
               <strong>{e.name}</strong> <span className="mono">{e.cardId}</span>
             </span>
             <span className="muted small">Ledger {e.ledger} · {e.closedAt}</span>
-            <a href={`${EXPLORER}/tx/${e.txHash}`} target="_blank" rel="noreferrer">
+            <a href={explorerTxUrl(e.txHash)} target="_blank" rel="noreferrer">
               View transaction
             </a>
           </li>
