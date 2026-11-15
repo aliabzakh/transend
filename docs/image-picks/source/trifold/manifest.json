@@ -1,0 +1,158 @@
+[
+ {
+  "id": "01-logo",
+  "w": 9.4,
+  "h": 2.6,
+  "kind": "cut"
+ },
+ {
+  "id": "02-headline-cash-home",
+  "w": 10.3,
+  "h": 2.8,
+  "kind": "solid"
+ },
+ {
+  "id": "03-headline-hand-to-hand",
+  "w": 12.2,
+  "h": 2.8,
+  "kind": "solid"
+ },
+ {
+  "id": "04-tab-problem",
+  "w": 5.0,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "05-tab-who",
+  "w": 5.0,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "06-tab-how",
+  "w": 5.3,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "07-tab-gain",
+  "w": 5.9,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "08-tab-partners",
+  "w": 5.3,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "09-tab-pays",
+  "w": 5.0,
+  "h": 1.15,
+  "kind": "cut"
+ },
+ {
+  "id": "10-problem",
+  "w": 10.5,
+  "h": 12.4,
+  "kind": "solid"
+ },
+ {
+  "id": "11-who",
+  "w": 10.5,
+  "h": 12.6,
+  "kind": "solid"
+ },
+ {
+  "id": "12-two-things",
+  "w": 16.5,
+  "h": 10.4,
+  "kind": "solid"
+ },
+ {
+  "id": "13-disc-1",
+  "w": 3.3,
+  "h": 3.3,
+  "kind": "cut"
+ },
+ {
+  "id": "13-disc-2",
+  "w": 3.3,
+  "h": 3.3,
+  "kind": "cut"
+ },
+ {
+  "id": "14-step-send",
+  "w": 7.1,
+  "h": 8.3,
+  "kind": "solid"
+ },
+ {
+  "id": "15-step-stellar",
+  "w": 7.1,
+  "h": 8.3,
+  "kind": "solid"
+ },
+ {
+  "id": "16-step-shop",
+  "w": 7.1,
+  "h": 8.3,
+  "kind": "solid"
+ },
+ {
+  "id": "17-arrow",
+  "w": 1.7,
+  "h": 1.1,
+  "kind": "cut"
+ },
+ {
+  "id": "18-scratch-card",
+  "w": 8.4,
+  "h": 6.2,
+  "kind": "cut"
+ },
+ {
+  "id": "19-shop-phone",
+  "w": 3.7,
+  "h": 7.4,
+  "kind": "cut"
+ },
+ {
+  "id": "20-why-stellar",
+  "w": 14.6,
+  "h": 6.5,
+  "kind": "solid"
+ },
+ {
+  "id": "21-qr",
+  "w": 8.4,
+  "h": 6.0,
+  "kind": "cut"
+ },
+ {
+  "id": "23-gain",
+  "w": 10.5,
+  "h": 10.2,
+  "kind": "solid"
+ },
+ {
+  "id": "24-partners",
+  "w": 10.5,
+  "h": 8.9,
+  "kind": "solid"
+ },
+ {
+  "id": "25-pays",
+  "w": 10.5,
+  "h": 9.2,
+  "kind": "solid"
+ },
+ {
+  "id": "26-pilot",
+  "w": 4.2,
+  "h": 4.2,
+  "kind": "cut"
+ }
+]
