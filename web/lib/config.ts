@@ -31,4 +31,4 @@ export type Department = (typeof OPEN_DEPARTMENTS)[number];
 
 export const EXPLORER = "https://stellar.expert/explorer/testnet";
 export const explorerTxUrl = (hash: string) => `${EXPLORER}/tx/${hash}`;
-export const explorerContractUrl = `${EXPLORER}/contract/${CONFIG.contractId}`;
+export const explorerContractUrl = (id: string) => `${EXPLORER}/contract/${id}`;

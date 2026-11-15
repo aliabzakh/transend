@@ -258,7 +258,7 @@ Every place the product touches Stellar, with its status on Nov 13, 2026. "Built
 
 | Feature | Detail | Status |
 |---|---|---|
-| Soroban RPC `getEvents` | Reads the contract's latest events for `/proof` | Built (`web/lib/stellar-read.ts`) |
+| Soroban RPC `getEvents` | Reads the contract's latest events for `/proof` | Built (`web/lib/stellar/read.ts`) |
 | `/proof` page | Contract ID, the last 20 events with transaction links, network, and the Savings panel | Page built; Savings panel is v2 |
 | stellar.expert links | Every transaction and the contract link to the testnet explorer | Partly built |
 | Forecast inputs | Deposit and redeem events (or their database mirror) feed the cash-demand forecast | v2 |
@@ -465,7 +465,7 @@ This part is self-contained. It replaces v1's "Design: minimal black and white".
 
 ## What we are building
 
-The visual identity is **Draft A, "Satoshi · Night market"** from *Transend design language drafts*: a dark green night ground, deep green cards, a bright leaf-green for the one action that matters, gold for the person being paid, Satoshi type throughout, and a paper-cut family mark.
+The visual identity is **Draft A, "Satoshi · Night market"** from *Transend design language drafts*: a dark green night ground, deep green cards, a bright leaf-green for the one action that matters, gold for the person being paid, Satoshi type throughout, and the Held mark (`docs/brand/`), which replaces the draft's paper-cut family mark.
 
 **Source files (in the repo):** `docs/design/Transend design language drafts.html` is the **source of truth for exact values** (colours, sizes, radii, the logo SVG and the three Satoshi font files are all inside it); `docs/design/Transend design language drafts.pdf` is the same design to look at. Draft A is page 2 of the PDF. The numbers below were read from the HTML.
 
@@ -578,7 +578,7 @@ Built once in `web/components/ui/` and reused everywhere. Props listed here are 
 | `Card` (new) | Canopy surface, `--radius-card`, 16 px padding; used for the recipient row, the quote, the hand-over code and the receipt |
 | `Avatar` (new) | 40 px Gold circle with an initial in `--color-on-highlight`, 700 (the draft's "A" for Akosua) |
 | `ReplyChip` (new) | Gold bubble (`--radius-chip`), label 12 / 500 over the message 16 / 700, text `--color-on-highlight` (the draft's "Received, thank you") |
-| `Logo` (new) | The paper-cut family mark (three leaf-green figures with a gold halo behind the middle one), plus the wordmark in Satoshi 700, letter-spacing −0.02em. The SVG is in the draft HTML (viewBox `0 0 120 86`; shown at 67×48 beside the wordmark and 34×24 in the app header). Extract it into `web/components/ui/Logo.tsx` |
+| `Logo` (new) | The **Held** mark (one Leaf figure with raised arms around a Gold coin), plus the wordmark in Satoshi 700, letter-spacing −0.02em. It replaces the draft's paper-cut family mark. The SVGs and usage rules are in `docs/brand/` (viewBox `0 0 96 96`; shown at 24 px in the app header). Build it into `web/components/ui/Logo.tsx` from `docs/brand/transend-mark.svg` |
 | `CardFace` | On-screen preview of the printed card. The **printed PDF stays one colour on white** |
 
 **Imagery rules.** The logo, the check mark on "has the money", and outline icons (lucide-react, 20 to 24 px, always beside a text label) are in. Photos, gradients, drop shadows and the cut-paper family illustration (Draft C's hero) are **not** in the MVP; flat only.

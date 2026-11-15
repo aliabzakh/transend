@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Transend">
+  <rect width="96" height="96" rx="21" fill="#0B1A13"/>
+  <g transform="translate(48 48) scale(0.68) translate(-48 -46.5)">
+    <circle cx="48" cy="27" r="15" fill="#E0A526"/>
+    <path d="M16 44 Q48 104 80 44" fill="none" stroke="#2FCB7A" stroke-width="14" stroke-linecap="round"/>
+  </g>
+</svg>
