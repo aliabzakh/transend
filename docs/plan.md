@@ -10,7 +10,7 @@ Two tracks build in parallel (see the PRD's "How to read this document"): **Core
 | # | Milestone | Track | State |
 |---|---|---|---|
 | 1 | Contract, tests, deploy | Core | Done (v1) |
-| 1b | Contract v2: Savings, no duress, redeploy | Core | Done: 37 tests, redeployed as `CA5VT3QZ...` |
+| 1b | Contract v2: no duress, redeploy | Core | Done: 27 tests, redeployed as `CCNJKUOE...` |
 | 2 | App shell and screens | UI + Core | Core done (auth, database, view-models). UI track (Draft A restyle, U1 to U8) not started |
 | 3 | Wire API to contract | Core | Done |
 | 3b | Trained forecast | Core | Done (on synthetic data) |
@@ -22,10 +22,7 @@ Two tracks build in parallel (see the PRD's "How to read this document"): **Core
 
 | PRD section | Files | What |
 |---|---|---|
-| Savings storage, functions, events, errors | `contracts/transend_escrow/src/{lib,types}.rs` | `SavingsConfig`; card `staked`, `yield_credited`, `stake_updated`; `stake`, `unstake`, `accrue`, `liquid_balance`, `staked_balance`, `savings`; admin `set_apy`, `fund_yield_reserve`, `pause_staking`, `unpause_staking`, `set_speedup`, `set_savings_limits`; events `stake`, `unstake`, `yield`; errors 18 to 21 |
-| Redeem and refund on liquid balance only; renewal carries the staked amount | same | `InsufficientLiquid` |
-| Tests 9 to 12 | `contracts/transend_escrow/src/test.rs` | 10 new tests (37 total) |
-| Redeploy | `scripts/deploy-testnet.ts` | Always rebuilds, passes Savings settings, funds a US$1,000 yield reserve |
+| Redeploy | `scripts/deploy-testnet.ts` | Always rebuilds |
 | Duress removed | contract comments | |
 
 ## Milestones 2 (Core) and 3: wire the API to the contract (done)
@@ -42,12 +39,11 @@ All Stellar calls sit behind `web/lib/stellar/`; apps never build transactions.
 | Quote (30 s firm) and send (C$900 a day, C$2,000 a month) | `web/lib/server/transfers.ts`, `web/app/api/{quote,send}` |
 | Shops: log-in, area status, activation request, PIN set-up | `web/lib/server/shops.ts`, `web/app/api/{shop,areas,cards/[id]/*}` |
 | Verification service: PIN, area, cash ceiling, verifier-signed redeem, 5-wrong-PIN freeze, balance, replies | `web/lib/server/verify.ts`, `web/app/api/{redeem,balance,messages}` |
-| Savings API | `web/lib/savings/rules.ts`, `web/lib/server/savings.ts`, `web/app/api/cards/[id]/{savings,stake,unstake}` |
 | Sender view-models, inbox | `web/lib/server/views.ts`, `web/app/api/{me,inbox}` |
 | Rate limits (redeem, balance, auth) | `web/lib/server/ratelimit.ts` (Postgres-backed) |
-| Admin API | `web/app/admin/api/{cards,areas,shops,savings,forecast}` |
+| Admin API | `web/app/admin/api/{cards,areas,shops,forecast}` |
 | Client layer used by the screens | `web/lib/client/{api,sender,shop}.ts` |
-| Screens wired (markup kept for the UI track) | sender, shop, `/proof` (Savings panel), `/admin/{cards,areas,cash,savings}` |
+| Screens wired (markup kept for the UI track) | sender, shop, `/proof`, `/admin/{cards,areas,cash}` |
 | Seed | `scripts/seed-demo.ts`, `web/lib/server/demo.ts` |
 
 ## Milestone 3b: trained forecast (done)
@@ -69,7 +65,7 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 
 | # | Criterion | Result |
 |---|---|---|
-| 1 | Contract deployed, ID in README and `/proof`, tests pass | Pass (37 tests) |
+| 1 | Contract deployed, ID in README and `/proof`, tests pass | Pass (27 tests) |
 | 2 | Deploy and seed in one command each | Pass (`npm run deploy:testnet`, `npm run seed:demo`) |
 | 3 | Sign up, add recipient, card PDF; sanctioned name refused | Pass (sender and recipient) |
 | 4 | Shop asks, sender approves, PIN set | Pass |
@@ -79,14 +75,12 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 | 8 | Used line, wrong PIN, over limit, third withdrawal declined | Pass |
 | 9 | Tense drops to US$50; closed declines all | Pass |
 | 10 | `/admin/cash`: band, ceiling, restock, "Sample data", forecaster | Pass |
-| 11 | Set aside and move back; shop sees only available; redeem above available declined; floor refused | Pass |
-| 12 | Yield accrues (demo clock), capped by reserve, events linked | Pass |
-| 13 | Inbox shows pickup and reply | Pass |
-| 14 | Only the sponsor pays fees | Pass at runtime: every transaction is fee-bumped; sender and shop accounts hold 0 XLM. The issuer, admin and verifier hold Friendbot XLM from the deploy script |
-| 15 | Every transaction links to stellar.expert | Pass |
-| 16 | 360 px and Slow 3G | 360 px pass (PIN pad fits, 48 px keys). Slow 3G not yet checked (milestone 5). Shop JS about 140 KB gzipped for modern browsers |
-| 17 | Draft A UI | Not started (UI track) |
-| 18 | Playwright test | Not started (milestone 5) |
+| 11 | Inbox shows pickup and reply | Pass |
+| 12 | Only the sponsor pays fees | Pass at runtime: every transaction is fee-bumped; sender and shop accounts hold 0 XLM. The issuer, admin and verifier hold Friendbot XLM from the deploy script |
+| 13 | Every transaction links to stellar.expert | Pass |
+| 14 | 360 px and Slow 3G | 360 px pass (PIN pad fits, 48 px keys). Slow 3G not yet checked (milestone 5). Shop JS about 140 KB gzipped for modern browsers |
+| 15 | Draft A UI | Not started (UI track) |
+| 16 | Playwright test | Not started (milestone 5) |
 
 **Live URL (checked Nov 13, 2026 after merging PR #2):** https://transend.vercel.app runs on Neon and the same testnet contract. Passed there through the API and `/proof`:
 
@@ -96,7 +90,6 @@ Run on the local app against testnet on Nov 13, 2026. Every criterion below pass
 - Used-line and third-withdrawal declines.
 - US$10 redeem in 5.8 s.
 - C$99 refused and C$100 quote (C$1.49 fee, US$68.18, 3.69% all-in), then sent in 5 s.
-- Set-aside floor refusal; US$20 set aside (the shop saw only the available part), then moved back.
 - Admin pages behind the password.
 - Nightly cron (3 shops recomputed).
 - `/proof` listing the live events with explorer links.
@@ -108,15 +101,14 @@ The browser screens were not clicked through on the live URL; they were on the l
 - **Admin API path:** `/admin/api/*`, not `/api/admin/*`, so the admin password (HTTP Basic on `/admin/`) covers it.
 - **Contract bindings:** a small hand-written typed wrapper (`web/lib/stellar/escrow.ts`) instead of generated bindings.
 - **15 printed cards for "one demo sender":** the contract allows 3 cards per sender, so bulk cards are spread over demo senders `print-1@transend.demo`, `print-2@...`, 3 each.
-- **Mock vault:** setting money aside moves no USDC; it stays in the escrow and only the books move. Yield is real USDC from the admin-funded reserve.
 - **Training history:** the model trains on 240 days of synthetic history (the dashboard shows 60) and is tested on the last 14 days of each shop.
 - **Redeem amount (open question 5 in v1):** the verification service signs only the amount the shop entered, which the recipient saw on the hand-over screen.
 
 ## Next (milestone 5, then 6)
 
 1. Click through the screens on the live URL (sender, shop, admin) at 360 px.
-2. Playwright end-to-end test, including one set-aside and move-back.
+2. Playwright end-to-end test.
 3. `docs/technical.md`, `docs/architecture.png`, README polish.
 4. 15 printed demo cards (`npm run seed:demo -- --cards 15` or `/admin/cards`).
 5. Slow 3G check; UI track U1 to U8.
-6. Stretch: renewal flow in the app, `scripts/aml-flags.ts`, auto-move-back, SMS mode.
+6. Stretch: renewal flow in the app, `scripts/aml-flags.ts`, SMS mode.

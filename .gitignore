@@ -19,3 +19,9 @@ demo-cards/
 scripts/ml/.venv/
 # Production env for Vercel (import in the dashboard): never commit
 vercel.env
+
+# Shareable bundle of docs/image-picks, rebuilt locally
+docs/image-picks/*.zip
+
+# Claude Code: share launch.json, keep personal settings local
+.claude/settings.local.json

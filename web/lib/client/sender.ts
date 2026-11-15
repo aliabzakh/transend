@@ -89,24 +89,4 @@ export const getQuote = (cardId: string, amountCad: number) =>
 export const send = (quoteId: string) =>
   apiPost<{ txHash: string; cardId: string; usdOut: number; amountCad: number }>("/api/send", { quoteId });
 
-export type SavingsView = {
-  cardId: string;
-  status: string;
-  availableUsd: number;
-  setAsideUsd: number;
-  totalUsd: number;
-  earnedUsd: number;
-  apyBps: number;
-  speedup: number;
-  stakingPaused: boolean;
-  minStakeUsd: number;
-  minLiquidUsd: number;
-  maxStakeNowUsd: number;
-};
-export const getSavings = (cardId: string) => apiGet<SavingsView>(`/api/cards/${cardId}/savings`);
-export const setAside = (cardId: string, amountUsd: number) =>
-  apiPost<SavingsView & Tx>(`/api/cards/${cardId}/stake`, { amountUsd });
-export const moveBack = (cardId: string, amountUsd: number) =>
-  apiPost<SavingsView & Tx>(`/api/cards/${cardId}/unstake`, { amountUsd });
-
 export const getInbox = () => apiGet<{ inbox: InboxItem[] }>("/api/inbox");

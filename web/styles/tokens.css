@@ -44,6 +44,12 @@
   --measure: 480px; /* Widest a screen column gets */
   --code-spacing: 0.08em;
 
+  /* Logo (Held mark, docs/brand). Forest arms suit this light ground; the Draft A restyle sets them to Leaf #2FCB7A on Night */
+  --logo-arms: #0f5132;
+  --logo-coin: #e0a526;
+  --logo-size: 24px; /* Mark height in the app header */
+  --wordmark-spacing: -0.02em;
+
   /* Print card (folded size) */
   --card-width: 105mm;
   --card-height: 74mm;

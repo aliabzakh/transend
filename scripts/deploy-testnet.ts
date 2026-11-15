@@ -1,7 +1,7 @@
 /**
  * Rebuilds the whole on-chain side of the demo from an empty testnet:
  *   issuer -> demo USDC -> its Stellar Asset Contract -> transend_escrow
- *   -> yield reserve -> .env + README.
+ *   -> .env + README.
  *
  * Usage: npm run deploy:testnet
  *
@@ -47,16 +47,6 @@ const LIMITS = {
   max_cards_per_sender: 3,
   max_senders_per_card: 2,
 };
-// Savings defaults from the PRD; admin can change them later.
-const usdEnv = (k: string, d: number) => BigInt(Math.round(Number(process.env[k] ?? d) * 1e7));
-const SAVINGS = {
-  apy_bps: Number(process.env.DEMO_APY_BPS ?? 400),
-  min_stake: usdEnv("MIN_STAKE_USD", 10),
-  min_liquid: usdEnv("MIN_LIQUID_USD", 100),
-  max_staked_total: usdEnv("MAX_STAKED_TOTAL_USD", 5000),
-};
-const YIELD_RESERVE = 1_000n * USD;
-
 function log(msg: string) {
   console.log(msg);
 }
@@ -178,7 +168,6 @@ async function main() {
         new Address(usdcContractId).toScVal(),
         new Address(verifier.kp.publicKey()).toScVal(),
         structScVal(LIMITS),
-        structScVal(SAVINGS),
       ],
     }),
     "deploy transend_escrow",
@@ -186,38 +175,7 @@ async function main() {
   if (!created) throw new Error("create returned no contract address");
   const contractId = Address.fromScVal(created).toString();
 
-  // 3. Yield reserve for Savings: the admin gets demo USDC and funds the contract with it.
-  log("Funding the Savings yield reserve...");
-  await run(admin.kp, Operation.changeTrust({ asset: usdc }), "admin USDC trustline", { classic: true }); // a no-op if it exists
-  await run(
-    issuer.kp,
-    Operation.payment({ destination: admin.kp.publicKey(), asset: usdc, amount: (Number(YIELD_RESERVE) / 1e7).toFixed(7) }),
-    "issue demo USDC to admin",
-    { classic: true },
-  );
-  await run(
-    admin.kp,
-    Operation.invokeContractFunction({
-      contract: contractId,
-      function: "fund_yield_reserve",
-      args: [nativeToScVal(YIELD_RESERVE, { type: "i128" })],
-    }),
-    "fund_yield_reserve",
-  );
-  const speedup = Number(process.env.DEMO_YIELD_SPEEDUP ?? 1);
-  if (speedup !== 1) {
-    await run(
-      admin.kp,
-      Operation.invokeContractFunction({
-        contract: contractId,
-        function: "set_speedup",
-        args: [nativeToScVal(speedup, { type: "u32" })],
-      }),
-      `set_speedup(${speedup})`,
-    );
-  }
-
-  // 4. Persist. Secrets only ever go to .env (gitignored, mode 600).
+  // 3. Persist. Secrets only ever go to .env (gitignored, mode 600).
   const values: Record<string, string> = {
     STELLAR_NETWORK: "testnet",
     SOROBAN_RPC_URL: RPC_URL,

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useParams } from "next/navigation";
-import { BellRing, CheckCircle2, Clock, ExternalLink, Pause, Play, Sprout, XCircle } from "lucide-react";
+import { BellRing, CheckCircle2, Clock, ExternalLink, Pause, Play, XCircle } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Row, Rows } from "@/components/ui/Row";
@@ -63,14 +63,9 @@ export default function CardPage() {
     );
   } else if (card.status === "Active") {
     action = (
-      <>
-        <Button href={`/app/cards/${card.id}/grow`} icon={Sprout}>
-          {s.card.grow}
-        </Button>
-        <Button variant="secondary" icon={Pause} onClick={run(freezeCard)} disabled={busy}>
-          {s.card.freeze}
-        </Button>
-      </>
+      <Button variant="secondary" icon={Pause} onClick={run(freezeCard)} disabled={busy}>
+        {s.card.freeze}
+      </Button>
     );
   } else if (card.status === "Frozen") {
     action = (
@@ -96,8 +91,6 @@ export default function CardPage() {
         <Row label={s.card.id} value={<span className="mono">{card.id}</span>} />
         <Row label={s.card.lines} value={s.card.linesValue(card.linesUsed, CONFIG.linesPerCard)} />
         <Row label={s.card.available} value={usd(card.availableUsd)} />
-        <Row label={s.card.growing} value={usd(card.setAsideUsd)} />
-        <Row label={s.card.earned} value={usd(card.earnedUsd)} />
       </Rows>
 
       {tx ? (

@@ -25,8 +25,6 @@ export const areaStatusEnum = pgEnum("area_status", ["calm", "tense", "closed"])
 export const transferKindEnum = pgEnum("transfer_kind", [
   "deposit",
   "redeem",
-  "stake",
-  "unstake",
   "freeze",
   "unfreeze",
   "activate",

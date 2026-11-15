@@ -12,7 +12,7 @@ import { balance } from "@/lib/client/shop";
 import { isCardId } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
 
-/** Card ID + PIN shows only "Available now": money set aside to grow is never shown at a shop. */
+/** Card ID + PIN shows the card's "Available now" balance. */
 export default function BalancePage() {
   const [cardId, setCardId] = useState("");
   const [step, setStep] = useState<"id" | "pin" | "result">("id");

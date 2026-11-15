@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transend Image Picks</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap">
+<style>
+  :root {
+    --bg: #0B1A13; --surface: #12291E; --line: #2A3D33; --fg: #F3F5F0; --muted: #A8B8AE;
+    --leaf: #2FCB7A; --gold: #E0A526; --on-gold: #3A2805; --board: #f4f2ec;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: Satoshi, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: rgba(11,26,19,.94); backdrop-filter: blur(8px);
+           border-bottom: 1px solid var(--line); }
+  .bar { max-width: 1400px; margin: 0 auto; padding: 14px 24px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.02em; }
+  nav { display: flex; gap: 6px; flex-wrap: wrap; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; padding: 7px 12px; border-radius: 999px; }
+  nav a:hover { background: var(--surface); color: var(--fg); }
+  .picks { margin-left: auto; display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--muted); }
+  .picks b { color: var(--leaf); }
+  button { font: inherit; font-size: 14px; font-weight: 700; border: 0; border-radius: 999px; padding: 8px 14px; cursor: pointer; }
+  .btn { background: var(--leaf); color: var(--bg); }
+  .ghost { background: var(--surface); color: var(--fg); }
+  main { max-width: 1400px; margin: 0 auto; padding: 32px 24px 80px; }
+  section { margin-bottom: 64px; scroll-margin-top: 80px; }
+  .kick { color: var(--gold); font-size: 13px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+  h2 { font-size: 32px; letter-spacing: -.02em; margin: 6px 0 6px; }
+  .lede { color: var(--muted); font-size: 16px; max-width: 760px; line-height: 1.45; margin-bottom: 22px; }
+  .pair { display: grid; grid-template-columns: 180px 1fr 1fr; gap: 16px; align-items: start;
+          padding: 18px 0; border-top: 1px solid var(--line); }
+  .pair h3 { font-size: 18px; letter-spacing: -.01em; }
+  .pair .num { color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .grid.wide { grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); }
+  figure { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }
+  figure.picked { border-color: var(--leaf); box-shadow: 0 0 0 2px var(--leaf); }
+  .shot { background: var(--board); display: flex; align-items: center; justify-content: center; padding: 10px; cursor: zoom-in; min-height: 120px; }
+  .shot.dark { background: #07110c; }
+  .shot img { max-width: 100%; max-height: 420px; display: block; }
+  figcaption { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 13px; color: var(--muted); }
+  figcaption .tag { font-weight: 700; color: var(--fg); }
+  figcaption label { margin-left: auto; display: flex; gap: 6px; align-items: center; cursor: pointer; color: var(--fg); font-weight: 500; }
+  input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--leaf); }
+  .files a { color: var(--leaf); }
+  .files li { margin: 8px 0 8px 18px; color: var(--muted); line-height: 1.4; }
+  #lb { position: fixed; inset: 0; background: rgba(0,0,0,.9); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; padding: 24px; }
+  #lb.on { display: flex; }
+  #lb img { max-width: 100%; max-height: 100%; }
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--leaf); color: var(--bg);
+           font-weight: 700; padding: 10px 18px; border-radius: 999px; display: none; z-index: 11; }
+  @media (max-width: 760px) {
+    .pair { grid-template-columns: 1fr; }
+    .grid.wide { grid-template-columns: 1fr; }
+    .bar { padding: 12px 16px; } main { padding: 24px 16px 64px; }
+    .picks { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<header><div class="bar">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="27" r="15" fill="#E0A526"/><path d="M16 44 Q48 104 80 44" fill="none" stroke="#2FCB7A" stroke-width="14" stroke-linecap="round"/></svg>
+    Image picks
+  </div>
+  <nav>
+    <a href="#devpost">Devpost: original vs clean</a>
+    <a href="#board">Trifold board</a>
+    <a href="#pieces">Trifold pieces</a>
+    <a href="#files">Print files</a>
+  </nav>
+  <div class="picks"><span><b id="count">0</b> picked</span>
+    <button class="btn" id="copy">Copy picks</button><button class="ghost" id="clear">Clear</button></div>
+</div></header>
+
+<main>
+  <section id="devpost">
+    <div class="kick">Devpost set</div>
+    <h2>Original vs clean</h2>
+    <p class="lede">The clean versions drop the source lines, the old logo, the grey explainer paragraph and the captions under the phones, so the chart carries the image. They use the Held mark wherever the old family mark appeared.</p>
+    <div id="pairs"></div>
+  </section>
+
+  <section id="board">
+    <div class="kick">Trifold, new style</div>
+    <h2>The finished board</h2>
+    <p class="lede">The standing mock-up, and the flat front view to glue from. The board is 36 × 48 in.</p>
+    <div class="grid wide" id="boards"></div>
+  </section>
+
+  <section id="pieces">
+    <div class="kick">Trifold, new style</div>
+    <h2>Every print piece</h2>
+    <p class="lede">At 300 dpi and actual print size. Pieces with see-through corners are cut-outs to layer on top of the cards.</p>
+    <div class="grid" id="piecegrid"></div>
+  </section>
+
+  <section id="files" class="files">
+    <div class="kick">Files</div>
+    <h2>Print and source</h2>
+    <ul>
+      <li><a href="5-print/print-tabloid.pdf">5-print/print-tabloid.pdf</a>: 11 × 17 pages, print at Actual size</li>
+      <li><a href="5-print/print-letter.pdf">5-print/print-letter.pdf</a>: letter pages, print at Actual size</li>
+      <li><code>source/trifold</code>: rebuilds the pieces, board and PDFs</li>
+      <li><code>source/devpost-clean</code>: rebuilds the clean Devpost versions from <code>docs/devpost</code></li>
+    </ul>
+  </section>
+</main>
+
+<div id="lb"><img alt=""></div>
+<div id="toast">Copied</div>
+
+<script>
+const DEVPOST = [
+  ["00-thumbnail", "Thumbnail"], ["01-hero", "Hero"], ["02-haiti", "Haiti in numbers"],
+  ["03-cost", "Cost comparison"], ["04-size", "Price by top-up size"], ["05-waterfall", "Where the money goes"],
+  ["06-breakeven", "Break-even"], ["07-growth", "36-month path"], ["08-corridors", "Five corridors"],
+  ["09-market", "Market size"], ["10-architecture", "Architecture"], ["11-money", "How the money moves"],
+  ["12-redeem", "One withdrawal, step by step"], ["13-sender", "Sender app"], ["14-shop", "Shop app"],
+  ["15-card", "The printed card"], ["16-forecast", "AI cash forecast"], ["17-grow", "Activation and Savings"],
+];
+const BOARDS = [["finished-board", "Finished board"], ["layout-guide", "Layout guide"]];
+const PIECES = [
+  ["01-logo", "Logo"], ["02-headline-cash-home", "Headline: Cash home,"], ["03-headline-hand-to-hand", "Headline: hand to hand."],
+  ["04-tab-problem", "Tab: The problem"], ["05-tab-who", "Tab: Who it's for"], ["06-tab-how", "Tab: How it works"],
+  ["07-tab-gain", "Tab: What they gain"], ["08-tab-partners", "Tab: Key partners"], ["09-tab-pays", "Tab: How it pays"],
+  ["10-problem", "Cost chart"], ["11-who", "Market squares"], ["12-two-things", "Two things we do better"],
+  ["13-disc-1", "Disc 1"], ["13-disc-2", "Disc 2"], ["14-step-send", "Step: Jean sends"],
+  ["15-step-stellar", "Step: On Stellar"], ["16-step-shop", "Step: In Haiti"], ["17-arrow", "Arrow (print 2)"],
+  ["18-scratch-card", "Scratch card"], ["19-shop-phone", "Shop phone"], ["20-why-stellar", "Architecture"],
+  ["21-qr", "QR codes"], ["23-gain", "Waterfall"], ["24-partners", "Partners diagram"],
+  ["25-pays", "36-month curve"], ["26-pilot", "Pilot sticker"],
+];
+
+const KEY = "transend-image-picks";
+let picks = new Set();
+try { picks = new Set(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...picks])); } catch (e) {} };
+
+function card(path, tag, title, dark) {
+  const f = document.createElement("figure");
+  if (picks.has(path)) f.classList.add("picked");
+  f.innerHTML = `<div class="shot${dark ? " dark" : ""}"><img loading="lazy" src="${path}" alt="${title}"></div>
+    <figcaption><span class="tag">${tag}</span><span>${title}</span>
+    <label><input type="checkbox" ${picks.has(path) ? "checked" : ""}> Pick</label></figcaption>`;
+  f.querySelector(".shot").onclick = () => { lb.querySelector("img").src = path; lb.classList.add("on"); };
+  f.querySelector("input").onchange = (e) => {
+    e.target.checked ? picks.add(path) : picks.delete(path);
+    f.classList.toggle("picked", e.target.checked); save(); count();
+  };
+  return f;
+}
+
+const pairs = document.getElementById("pairs");
+for (const [id, title] of DEVPOST) {
+  const row = document.createElement("div"); row.className = "pair";
+  row.innerHTML = `<div><div class="num">${id.slice(0, 2)}</div><h3>${title}</h3></div>`;
+  row.append(card(`1-devpost-original/${id}.png`, "Original", "", true),
+             card(`2-devpost-clean/${id}-clean.png`, "Clean", "", true));
+  pairs.append(row);
+}
+const boards = document.getElementById("boards");
+for (const [id, title] of BOARDS) boards.append(card(`3-trifold-board/${id}.png`, "Board", title, false));
+const grid = document.getElementById("piecegrid");
+for (const [id, title] of PIECES) grid.append(card(`4-trifold-pieces/${id}.png`, id.slice(0, 2), title, false));
+
+const lb = document.getElementById("lb");
+lb.onclick = () => lb.classList.remove("on");
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") lb.classList.remove("on"); });
+
+function count() { document.getElementById("count").textContent = picks.size; }
+count();
+document.getElementById("copy").onclick = async () => {
+  const text = [...picks].sort().join("\n") || "(no picks yet)";
+  try { await navigator.clipboard.writeText(text); } catch (e) { prompt("Copy your picks:", text); return; }
+  const t = document.getElementById("toast"); t.style.display = "block"; setTimeout(() => t.style.display = "none", 1400);
+};
+document.getElementById("clear").onclick = () => {
+  picks.clear(); save(); count();
+  document.querySelectorAll("figure").forEach(f => { f.classList.remove("picked"); f.querySelector("input").checked = false; });
+};
+</script>
+</body>
+</html>

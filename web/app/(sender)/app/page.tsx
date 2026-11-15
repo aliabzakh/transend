@@ -72,9 +72,6 @@ export default function HomePage() {
               </span>
               <span>{s.card.statusText[r.card.status]}</span>
               <span>{s.home.balanceLine(r.card.availableUsd.toFixed(2))}</span>
-              {r.card.setAsideUsd > 0 ? (
-                <span className="muted">{s.home.growingLine(r.card.setAsideUsd.toFixed(2))}</span>
-              ) : null}
             </Link>
           ) : (
             <div key={r.id} className="link-card">
