@@ -1,6 +1,6 @@
 import { Screen } from "@/components/ui/Screen";
 import { CONFIG, explorerContractUrl, explorerTxUrl } from "@/lib/config";
-import { fetchRecentEvents } from "@/lib/stellar-read";
+import { fetchRecentEvents } from "@/lib/stellar/read";
 import { getSavings, type ChainSavings } from "@/lib/stellar/escrow";
 
 // Public, no login. Reads the live contract on every request.

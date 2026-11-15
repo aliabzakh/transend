@@ -258,7 +258,7 @@ Every place the product touches Stellar, with its status on Nov 13, 2026. "Built
 
 | Feature | Detail | Status |
 |---|---|---|
-| Soroban RPC `getEvents` | Reads the contract's latest events for `/proof` | Built (`web/lib/stellar-read.ts`) |
+| Soroban RPC `getEvents` | Reads the contract's latest events for `/proof` | Built (`web/lib/stellar/read.ts`) |
 | `/proof` page | Contract ID, the last 20 events with transaction links, network, and the Savings panel | Page built; Savings panel is v2 |
 | stellar.expert links | Every transaction and the contract link to the testnet explorer | Partly built |
 | Forecast inputs | Deposit and redeem events (or their database mirror) feed the cash-demand forecast | v2 |
