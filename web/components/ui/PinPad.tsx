@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Delete, Eraser } from "lucide-react";
-import { Button } from "./Button";
+import { common } from "@/strings/common";
 
 const CLEAR_AFTER_MS = 60_000;
 
@@ -18,8 +18,9 @@ function shuffledDigits(): string[] {
 }
 
 /**
- * Scrambled 3x4 keypad with masked dots. The key order changes every time the
- * pad is shown or submitted. The PIN lives only in this component's state: never
+ * Scrambled 3x4 keypad of pill keys with masked dots. The last row is Back, the
+ * last digit and Done (as in Draft A); Clear sits beside the dots. The key order
+ * changes every time the pad is shown or submitted. The PIN lives only in this component's state: never
  * in a URL, log, analytics event or storage, and it clears itself after 60 s.
  */
 export function PinPad({
@@ -74,33 +75,45 @@ export function PinPad({
       {d}
     </button>
   );
+  const ready = pin.length === length;
 
   return (
     <div className="pin">
-      <div className="pin-dots" aria-hidden>
-        {Array.from({ length }).map((_, i) => (
-          <span key={i} className="pin-dot" data-on={i < pin.length} />
-        ))}
-      </div>
-      <div className="pin-grid">
-        {keys.slice(0, 9).map(digit)}
-        <button type="button" className="pin-key pin-key-small" onClick={() => setPin("")}>
+      <div className="pin-top">
+        <div className="pin-dots" aria-hidden>
+          {Array.from({ length }).map((_, i) => (
+            <span key={i} className="pin-dot" data-on={i < pin.length} />
+          ))}
+        </div>
+        <button type="button" className="pin-clear" onClick={() => setPin("")} disabled={!pin}>
           <Eraser className="icon" aria-hidden />
           <span>{clearLabel}</span>
         </button>
-        {keys[9] ? digit(keys[9]) : <span />}
+      </div>
+      <p className="sr-only" aria-live="polite">
+        {common.pinEntered(pin.length, length)}
+      </p>
+      <div className="pin-grid">
+        {keys.slice(0, 9).map(digit)}
         <button
           type="button"
-          className="pin-key pin-key-small"
+          className="pin-key pin-key-back"
           onClick={() => setPin((p) => p.slice(0, -1))}
         >
           <Delete className="icon" aria-hidden />
           <span>{backLabel}</span>
         </button>
+        {keys[9] ? digit(keys[9]) : <span />}
+        <button
+          type="button"
+          className="pin-key pin-key-done"
+          onClick={submit}
+          disabled={!ready}
+          data-ready={ready}
+        >
+          {submitLabel}
+        </button>
       </div>
-      <Button onClick={submit} disabled={pin.length !== length}>
-        {submitLabel}
-      </Button>
     </div>
   );
 }
