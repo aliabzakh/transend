@@ -6,6 +6,7 @@
 import { Address, Keypair, nativeToScVal, xdr } from "@stellar/stellar-sdk";
 import { ContractError, invoke, read, type Submitted } from "./submit";
 import { admin, fromUnits, toUnits, verifier } from "./network";
+import { chainCardId } from "../cards/chain-id";
 
 /** The contract's #[contracterror] enum, by number. */
 export const ERRORS = {
@@ -38,6 +39,8 @@ export function escrowErrorName(e: unknown): EscrowErrorName | null {
 }
 
 const sym = (s: string) => nativeToScVal(s, { type: "symbol" });
+// The ledger is public, so cards go on-chain under their scrambled ID, never the printed one.
+const cardKey = (cardId: string) => sym(chainCardId(cardId));
 const i128 = (n: bigint) => nativeToScVal(n, { type: "i128" });
 const u32 = (n: number) => nativeToScVal(n, { type: "u32" });
 const addr = (a: string) => new Address(a).toScVal();
@@ -97,7 +100,7 @@ function toCard(raw: RawCard): ChainCard {
 
 export async function getCard(cardId: string): Promise<ChainCard | null> {
   try {
-    return toCard((await read("card", [sym(cardId)])) as RawCard);
+    return toCard((await read("card", [cardKey(cardId)])) as RawCard);
   } catch (e) {
     if (escrowErrorName(e) === "NotFound") return null;
     throw e;
@@ -105,7 +108,7 @@ export async function getCard(cardId: string): Promise<ChainCard | null> {
 }
 
 export async function liquidBalanceUsd(cardId: string): Promise<number> {
-  return fromUnits(BigInt((await read("liquid_balance", [sym(cardId)])) as bigint));
+  return fromUnits(BigInt((await read("liquid_balance", [cardKey(cardId)])) as bigint));
 }
 
 export type ChainSavings = {
@@ -146,33 +149,33 @@ export function pendingYieldUsd(card: ChainCard, s: ChainSavings, nowSec = Date.
 export const issueCard = (sender: Keypair, cardId: string, hashes: Uint8Array[], renewalHash: Uint8Array) =>
   invoke(sender, "issue_card", [
     addr(sender.publicKey()),
-    sym(cardId),
+    cardKey(cardId),
     xdr.ScVal.scvVec(hashes.map(bytes)),
     bytes(renewalHash),
   ]);
 
-export const activate = (sender: Keypair, cardId: string) => invoke(sender, "activate", [sym(cardId)]);
+export const activate = (sender: Keypair, cardId: string) => invoke(sender, "activate", [cardKey(cardId)]);
 
 export const deposit = (from: Keypair, cardId: string, usd: number) =>
-  invoke(from, "deposit", [sym(cardId), addr(from.publicKey()), i128(toUnits(usd))]);
+  invoke(from, "deposit", [cardKey(cardId), addr(from.publicKey()), i128(toUnits(usd))]);
 
 export const freezeBySender = (sender: Keypair, cardId: string) =>
-  invoke(sender, "freeze", [sym(cardId), addr(sender.publicKey())]);
+  invoke(sender, "freeze", [cardKey(cardId), addr(sender.publicKey())]);
 
-export const unfreeze = (sender: Keypair, cardId: string) => invoke(sender, "unfreeze", [sym(cardId)]);
+export const unfreeze = (sender: Keypair, cardId: string) => invoke(sender, "unfreeze", [cardKey(cardId)]);
 
 export const stake = (sender: Keypair, cardId: string, usd: number) =>
-  invoke(sender, "stake", [sym(cardId), i128(toUnits(usd))]);
+  invoke(sender, "stake", [cardKey(cardId), i128(toUnits(usd))]);
 
 export const unstake = (sender: Keypair, cardId: string, usd: number) =>
-  invoke(sender, "unstake", [sym(cardId), i128(toUnits(usd))]);
+  invoke(sender, "unstake", [cardKey(cardId), i128(toUnits(usd))]);
 
 // ---- verifier-signed ----
 
 /** `line` is the printed line, 1 to 20; the contract counts from 0. */
 export const redeem = (cardId: string, line: number, code: string, usd: number, shop: string): Promise<Submitted> =>
   invoke(verifier(), "redeem", [
-    sym(cardId),
+    cardKey(cardId),
     u32(line - 1),
     bytes(Buffer.from(code, "ascii")),
     i128(toUnits(usd)),
@@ -180,10 +183,10 @@ export const redeem = (cardId: string, line: number, code: string, usd: number, 
   ]);
 
 export const freezeByVerifier = (cardId: string) =>
-  invoke(verifier(), "freeze", [sym(cardId), addr(verifier().publicKey())]);
+  invoke(verifier(), "freeze", [cardKey(cardId), addr(verifier().publicKey())]);
 
 /** Credits pending yield. Anyone may call it; the verifier signs so nobody needs XLM. */
-export const accrue = (cardId: string) => invoke(verifier(), "accrue", [sym(cardId)]);
+export const accrue = (cardId: string) => invoke(verifier(), "accrue", [cardKey(cardId)]);
 
 // ---- admin ----
 
