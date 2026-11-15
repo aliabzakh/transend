@@ -4,6 +4,7 @@
  * hashes, on-chain.
  */
 import { createHash, randomBytes } from "node:crypto";
+import { chainCardId } from "./chain-id";
 import { CROCKFORD } from "./format";
 
 export const LINES = 20;
@@ -33,14 +34,16 @@ export function codeHash(cardId: string, line: number, code: string): Buffer {
 
 export type CardSecrets = { cardId: string; codes: string[]; renewalCode: string };
 
+/** The hashes use the card's scrambled on-chain ID, because that is the ID the contract checks codes against. */
 export function generateCard(cardId: string): CardSecrets & { hashes: Buffer[]; renewalHash: Buffer } {
   const codes = Array.from({ length: LINES }, randomCode);
   const renewalCode = randomCode();
+  const onChainId = chainCardId(cardId);
   return {
     cardId,
     codes,
     renewalCode,
-    hashes: codes.map((c, i) => codeHash(cardId, i, c)),
-    renewalHash: codeHash(cardId, LINES, renewalCode),
+    hashes: codes.map((c, i) => codeHash(onChainId, i, c)),
+    renewalHash: codeHash(onChainId, LINES, renewalCode),
   };
 }
