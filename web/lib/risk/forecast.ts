@@ -132,7 +132,8 @@ function predictDay(
     const q = [scoreQuantile(model.quantiles.p10, x), scoreQuantile(model.quantiles.p50, x), scoreQuantile(model.quantiles.p90, x)]
       .map((v) => Math.max(0, v))
       .sort((a, b) => a - b);
-    return { p10: q[0], p50: q[1], p90: q[2] };
+    const k = model.calibration?.bandScale ?? 1;
+    return { p10: Math.max(0, q[1] - k * (q[1] - q[0])), p50: q[1], p90: q[1] + k * (q[2] - q[1]) };
   }
   const p50 = Math.max(baselineP50(day, past, input.tense), input.waitingUsd * 0.1 / 7);
   return { p10: p50 * spread.lo, p50, p90: p50 * spread.hi };

@@ -72,3 +72,16 @@ export function sampleHistory(shopId: string, end: Date, days = 60): SampleDay[]
   }
   return out;
 }
+
+/**
+ * Synthetic "liquid money waiting on nearby cards" for a sample shop on `day`: about a
+ * week of payouts, more after the monthly top-ups. Used for training and for the
+ * simulated shops on /ops; real shops use the live card balances instead.
+ */
+export function sampleWaitingUsd(shopId: string, day: string, past: number[]): number {
+  const c = calendar(new Date(`${day}T00:00:00Z`));
+  const r = mulberry32(hashStr(`waiting:${shopId}:${day}`));
+  const recent = past.slice(-7);
+  const ma7 = recent.length ? recent.reduce((a, b) => a + b, 0) / recent.length : 0;
+  return ma7 * 7 * (1 + 0.5 * (c.monthStart || c.afterTopup)) * (0.8 + 0.4 * r());
+}
