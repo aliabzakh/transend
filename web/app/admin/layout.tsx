@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { common } from "@/strings/common";
+import { Logo } from "@/components/ui/Logo";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <header className="app-header">
         <Link href="/admin/cards" className="brand">
-          {common.brand} admin
+          <Logo wordmark={`${common.brand} admin`} />
         </Link>
         <nav className="nav-row" aria-label="Admin">
           <Link href="/admin/cards" className="nav-link">Cards</Link>
