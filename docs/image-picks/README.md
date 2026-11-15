@@ -19,5 +19,6 @@ Then go to http://localhost:8790.
 | `5-print` | Letter and tabloid PDFs of the pieces; print at Actual size |
 | `source/trifold` | Rebuilds the pieces, board and PDFs (`build.py`, `compose.py`, `pack.py`) |
 | `source/devpost-clean` | Rebuilds `2-devpost-clean` from `1-devpost-original` (`clean.py`) |
+| `source/devpost-v2` | Builds `docs/devpost/images`, the images the Devpost story now uses: Held mark with sources kept, real app screens, the operations map and the admin forecast view |
 
 `transend-image-picks.zip` (not committed) bundles all of it for sending.
