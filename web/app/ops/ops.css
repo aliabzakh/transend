@@ -1,0 +1,992 @@
+/*
+ * Operations view (/ops). Night market palette from docs/prd.md (Draft A), scoped to .ops
+ * so the rest of the app keeps its own tokens. Dark only, like the app.
+ */
+.ops {
+  --o-bg: #0b1a13;
+  --o-panel: #0f2219;
+  --o-surface: #12291e;
+  --o-raise: #17331f;
+  --o-line: #24402f;
+  --o-grid: #1d3527;
+  --o-fg: #f3f5f0;
+  --o-muted: #a8b8ae;
+  --o-hint: #8fa197;
+  --o-leaf: #2fcb7a;
+  --o-leaf-tint: #9fe3be;
+  --o-gold: #e0a526;
+  --o-clay: #c2462b;
+  --o-band: rgba(47, 203, 122, 0.22);
+  --o-band-back: rgba(243, 245, 240, 0.1);
+
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr) 400px;
+  grid-template-rows: 52px minmax(0, 1fr) 124px;
+  grid-template-areas:
+    "head head head"
+    "left center right"
+    "left time time";
+  background: var(--o-bg);
+  color: var(--o-fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+}
+.ops *,
+.ops *::before,
+.ops *::after {
+  box-sizing: border-box;
+}
+.ops .muted {
+  color: var(--o-muted);
+}
+.ops .mono {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+}
+.ops .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ops button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ops :focus-visible {
+  outline: 2px solid var(--o-leaf);
+  outline-offset: 2px;
+}
+
+/* Header */
+.ops-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--o-line);
+  background: var(--o-panel);
+  min-width: 0;
+}
+.ops-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+}
+.ops-mark {
+  width: 22px;
+  height: 22px;
+}
+.ops-brand-word {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ops-brand-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--o-line);
+}
+.ops-brand-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--o-muted);
+}
+.ops-head-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ops-flag {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--o-gold);
+  color: var(--o-gold);
+  font-size: 12px;
+  font-weight: 500;
+}
+.ops-flag-quiet {
+  border-color: var(--o-line);
+  color: var(--o-muted);
+}
+.ops-head-range {
+  color: var(--o-muted);
+  font-variant-numeric: tabular-nums;
+}
+.ops-head-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--o-fg);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid var(--o-line);
+  border-radius: 8px;
+}
+.ops-head-link:hover {
+  background: var(--o-surface);
+}
+
+/* Side panels */
+.ops-left,
+.ops-right {
+  background: var(--o-panel);
+  overflow-y: auto;
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--o-line) transparent;
+}
+.ops-left {
+  grid-area: left;
+  border-right: 1px solid var(--o-line);
+}
+.ops-right {
+  grid-area: right;
+  border-left: 1px solid var(--o-line);
+}
+.ops-h {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--o-hint);
+}
+.ops-h-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ops-h-row .ops-h {
+  margin: 0;
+}
+.ops-note {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: var(--o-hint);
+}
+.ops-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--o-muted);
+  border: 1px dashed var(--o-line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* Stat tiles */
+.ops-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.ops-tiles-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.ops-tile {
+  background: var(--o-surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 0;
+}
+.ops-tile-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--o-muted);
+  font-size: 12px;
+}
+.ops-live {
+  font-size: 10px;
+  color: var(--o-hint);
+  white-space: nowrap;
+}
+.ops-tile-value {
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+.ops-tiles-3 .ops-tile-value {
+  font-size: 18px;
+}
+.ops-tile-sub {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--o-hint);
+}
+
+/* Segmented control */
+.ops-seg {
+  display: inline-flex;
+  background: var(--o-surface);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+.ops-seg button {
+  border: 0;
+  background: transparent;
+  color: var(--o-muted);
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 6px;
+}
+.ops-seg button[aria-pressed="true"] {
+  background: var(--o-raise);
+  color: var(--o-fg);
+  font-weight: 600;
+}
+
+/* Tables */
+.ops-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.ops-table th,
+.ops-table td {
+  padding: 7px 4px;
+  border-bottom: 1px solid var(--o-grid);
+  text-align: left;
+  font-weight: 400;
+  vertical-align: middle;
+}
+.ops-table thead th {
+  font-size: 11px;
+  color: var(--o-hint);
+  padding-top: 0;
+}
+.ops-table thead th.num {
+  text-align: right;
+}
+.ops-table tbody tr {
+  cursor: pointer;
+}
+.ops-table tbody tr:hover,
+.ops-table tbody tr[aria-selected="true"] {
+  background: var(--o-surface);
+}
+.ops-table tbody tr[aria-selected="true"] th {
+  box-shadow: inset 2px 0 0 var(--o-leaf);
+}
+.ops-table-plain tbody tr {
+  cursor: default;
+}
+.ops-table-plain tbody tr:hover {
+  background: none;
+}
+.ops-table tr[aria-current="date"] {
+  background: var(--o-surface);
+}
+.ops-shop-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+}
+.ops-shop-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--o-hint);
+}
+.ops-real {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--o-fg);
+  color: var(--o-bg);
+}
+.ops-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--o-grid);
+  overflow: hidden;
+  width: 100%;
+  min-width: 90px;
+}
+.ops-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--o-leaf);
+}
+.ops-bar-low span {
+  background: var(--o-gold);
+}
+.ops-bar-out span {
+  background: var(--o-clay);
+}
+.ops-bar-paused span {
+  background: var(--o-hint);
+}
+.ops-bar-label {
+  display: block;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--o-hint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Chips */
+.ops-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--o-line);
+  color: var(--o-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.ops-chip-on {
+  border-color: var(--o-leaf);
+  color: var(--o-leaf-tint);
+}
+.ops-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--o-surface);
+  font-size: 12px;
+  font-weight: 500;
+}
+.ops-state-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--o-leaf);
+}
+.ops-state-low .ops-state-dot {
+  background: var(--o-gold);
+}
+.ops-state-out {
+  background: var(--o-clay);
+}
+.ops-state-out .ops-state-dot {
+  background: var(--o-fg);
+}
+.ops-state-paused .ops-state-dot {
+  background: var(--o-hint);
+}
+.ops-area {
+  display: inline-flex;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--o-surface);
+  color: var(--o-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.ops-area-tense {
+  background: #3a2805;
+  color: var(--o-gold);
+}
+.ops-area-closed {
+  background: var(--o-clay);
+  color: var(--o-fg);
+}
+
+/* Model card, watch list */
+.ops-model-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.ops-model-name {
+  font-size: 15px;
+  font-weight: 600;
+  margin-right: 4px;
+}
+.ops-dl {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.ops-dl div {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 8px;
+}
+.ops-dl dt {
+  color: var(--o-hint);
+}
+.ops-dl dd {
+  margin: 0;
+}
+.ops-watch {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.ops-watch button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--o-line);
+  background: transparent;
+  text-align: left;
+}
+.ops-watch button:hover {
+  background: var(--o-surface);
+}
+
+/* Shop detail */
+.ops-detail-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ops-detail-name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.ops-detail-sub {
+  margin: 2px 0 0;
+  color: var(--o-muted);
+  font-size: 12px;
+}
+.ops-detail-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: -6px;
+}
+.ops-icon-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid var(--o-line);
+  background: transparent;
+}
+.ops-icon-btn:hover {
+  background: var(--o-surface);
+}
+.ops-reason {
+  margin: -6px 0 0;
+  padding: 8px 12px;
+  border-left: 2px solid var(--o-leaf);
+  background: var(--o-surface);
+  border-radius: 0 10px 10px 0;
+  font-size: 12.5px;
+}
+
+/* Charts */
+.ops-chart {
+  position: relative;
+  width: 100%;
+}
+.ops-chart svg {
+  display: block;
+  overflow: visible;
+}
+.ops-grid {
+  stroke: var(--o-grid);
+  stroke-width: 1;
+}
+.ops-daysep {
+  stroke: var(--o-line);
+  stroke-width: 1;
+}
+.ops-axis {
+  fill: var(--o-hint);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.ops-axis-strong {
+  fill: var(--o-muted);
+  font-weight: 600;
+}
+.ops-future {
+  fill: rgba(243, 245, 240, 0.025);
+}
+.ops-today {
+  stroke: var(--o-muted);
+  stroke-width: 1;
+}
+.ops-band {
+  fill: var(--o-band);
+}
+.ops-band-back {
+  fill: var(--o-band-back);
+}
+.ops-line-fc {
+  fill: none;
+  stroke: var(--o-leaf);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.ops-line-back {
+  fill: none;
+  stroke: var(--o-hint);
+  stroke-width: 1.25;
+  stroke-linejoin: round;
+}
+.ops-line-actual {
+  fill: none;
+  stroke: var(--o-fg);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ops-crosshair {
+  stroke: var(--o-muted);
+  stroke-width: 1;
+}
+.ops-dot-actual {
+  fill: var(--o-fg);
+  stroke: var(--o-panel);
+  stroke-width: 2;
+}
+.ops-dot-fc {
+  fill: var(--o-leaf);
+  stroke: var(--o-panel);
+  stroke-width: 2;
+}
+.ops-cash-area {
+  fill: rgba(47, 203, 122, 0.18);
+}
+.ops-cash-line {
+  fill: none;
+  stroke: var(--o-leaf);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.ops-dim {
+  opacity: 0.35;
+}
+.ops-ceiling {
+  fill: none;
+  stroke: var(--o-muted);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+.ops-tick {
+  fill: var(--o-gold);
+  opacity: 0.35;
+}
+.ops-tick-done {
+  fill: var(--o-gold);
+}
+.ops-playhead {
+  stroke: var(--o-fg);
+  stroke-width: 1.5;
+}
+.ops-playhead-knob {
+  fill: var(--o-fg);
+}
+.ops-scrub {
+  cursor: ew-resize;
+  touch-action: none;
+}
+.ops-tip {
+  position: absolute;
+  pointer-events: none;
+  display: grid;
+  gap: 1px;
+  padding: 7px 10px;
+  min-width: 150px;
+  background: var(--o-raise);
+  border: 1px solid var(--o-line);
+  border-radius: 8px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+.ops-legend {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 11.5px;
+  color: var(--o-muted);
+}
+.ops-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ops-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+}
+.ops-swatch-line {
+  height: 2px;
+  background: var(--o-fg);
+}
+.ops-swatch-band {
+  background-image: linear-gradient(var(--o-leaf), var(--o-leaf));
+  background-size: 100% 2px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: var(--o-band);
+}
+.ops-swatch-muted-band {
+  background-color: var(--o-band-back);
+  background-image: linear-gradient(var(--o-hint), var(--o-hint));
+  background-size: 100% 1px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.ops-swatch-ceiling {
+  height: 0;
+  border-top: 1px dashed var(--o-muted);
+}
+.ops-swatch-tick {
+  width: 3px;
+  height: 9px;
+  background: var(--o-gold);
+}
+
+/* Map */
+.ops-center {
+  grid-area: center;
+  position: relative;
+  min-height: 0;
+  background: #06110c;
+}
+/* Beats maplibre-gl.css, which sets .maplibregl-map to position: relative. */
+.ops .ops-map {
+  position: absolute;
+  inset: 0;
+}
+.ops-map-loading {
+  display: grid;
+  place-items: center;
+  color: var(--o-hint);
+}
+.ops-map-legend {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  max-width: calc(100% - 140px);
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: rgba(11, 26, 19, 0.86);
+  border: 1px solid var(--o-line);
+  font-size: 11.5px;
+  color: var(--o-muted);
+}
+.ops-map-legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ops-key-pin {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--o-leaf);
+  background: var(--o-bg);
+}
+.ops-key-real {
+  border-color: var(--o-fg);
+  background: var(--o-fg);
+  box-shadow: inset 0 0 0 2px var(--o-bg);
+}
+.ops-key-topup {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--o-gold);
+}
+.ops-map-back {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--o-line);
+  background: rgba(11, 26, 19, 0.9);
+}
+.ops-map-back:hover {
+  background: var(--o-surface);
+}
+
+/* Map pins (DOM markers) */
+.ops-pin {
+  --c: var(--o-leaf);
+  --f: 1;
+  position: relative;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.ops-pin[data-state="low"] {
+  --c: var(--o-gold);
+}
+.ops-pin[data-state="out"] {
+  --c: var(--o-clay);
+}
+.ops-pin[data-state="paused"] {
+  --c: var(--o-hint);
+}
+.ops-pin-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--c) calc(var(--f) * 360deg), rgba(243, 245, 240, 0.22) 0);
+  -webkit-mask: radial-gradient(circle, transparent 6px, #000 6.5px);
+  mask: radial-gradient(circle, transparent 6px, #000 6.5px);
+  box-shadow: 0 0 0 1.5px rgba(11, 26, 19, 0.9);
+}
+.ops-pin-dot {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: rgba(11, 26, 19, 0.92);
+}
+.ops-pin[data-real="1"] .ops-pin-dot {
+  inset: 7px;
+  background: var(--o-fg);
+}
+.ops-pin[data-selected="1"] {
+  z-index: 2;
+}
+.ops-pin[data-selected="1"]::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--o-fg);
+}
+.ops-pin-label {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 4px);
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(11, 26, 19, 0.88);
+  color: var(--o-fg);
+  font: 500 11.5px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.ops-pin:hover .ops-pin-label,
+.ops-pin[data-selected="1"] .ops-pin-label,
+.ops-map-near .ops-pin-label {
+  opacity: 1;
+}
+/* The shopkeeper topping up her own cash: a gold outline while it happens, one pulse when done. */
+.ops-pin[data-topup="1"]::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--o-gold);
+}
+.ops-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid var(--o-gold);
+  pointer-events: none;
+  animation: ops-pulse 1.1s ease-out forwards;
+}
+@keyframes ops-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+/* Still runs (so the span removes itself on animationend), but is never seen. */
+@media (prefers-reduced-motion: reduce) {
+  .ops-pulse {
+    animation-duration: 1ms;
+    opacity: 0;
+  }
+}
+
+/* MapLibre controls in the palette */
+.ops .maplibregl-ctrl-group {
+  background: rgba(11, 26, 19, 0.9);
+  border: 1px solid var(--o-line);
+  box-shadow: none;
+}
+.ops .maplibregl-ctrl-group button + button {
+  border-top-color: var(--o-line);
+}
+.ops .maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.9);
+}
+.ops .maplibregl-ctrl-attrib {
+  background: rgba(11, 26, 19, 0.75);
+  color: var(--o-hint);
+}
+.ops .maplibregl-ctrl-attrib a {
+  color: var(--o-muted);
+}
+.ops .maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+/* Attribution stays folded to its (i) button and opens on hover or focus. */
+.ops .maplibregl-ctrl-attrib.maplibregl-compact:not(:hover):not(:focus-within) .maplibregl-ctrl-attrib-inner {
+  display: none;
+}
+.ops .maplibregl-ctrl-attrib.maplibregl-compact:not(:hover):not(:focus-within) {
+  padding: 0;
+  min-height: 24px;
+}
+.ops .maplibregl-ctrl-scale {
+  background: rgba(11, 26, 19, 0.75);
+  color: var(--o-muted);
+  border-color: var(--o-muted);
+}
+
+/* Timeline */
+.ops-timeline {
+  grid-area: time;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px 8px;
+  border-top: 1px solid var(--o-line);
+  background: var(--o-panel);
+  min-width: 0;
+}
+.ops-controls {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+.ops-controls .ops-seg {
+  grid-column: 1 / -1;
+}
+.ops-play {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--o-leaf);
+  color: var(--o-bg) !important;
+  display: grid;
+  place-items: center;
+}
+.ops-play:hover {
+  filter: brightness(1.08);
+}
+.ops-clock {
+  display: grid;
+  min-width: 110px;
+}
+.ops-clock-day {
+  color: var(--o-muted);
+  font-size: 12px;
+}
+.ops-clock-time {
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.ops-timeline-chart {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Narrower screens: stack the panels under the map. */
+@media (max-width: 1180px) {
+  .ops {
+    grid-template-columns: 320px minmax(0, 1fr) 340px;
+  }
+  .ops-head-range {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .ops {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  .ops-head {
+    flex-wrap: wrap;
+    padding: 10px 16px;
+  }
+  .ops-head-meta {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+  .ops-center {
+    height: 60vh;
+    order: 1;
+  }
+  .ops-timeline {
+    order: 2;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ops-right {
+    order: 3;
+  }
+  .ops-left {
+    order: 4;
+  }
+  .ops-left,
+  .ops-right {
+    overflow: visible;
+    border: 0;
+    border-top: 1px solid var(--o-line);
+  }
+  .ops-map-legend {
+    max-width: calc(100% - 24px);
+  }
+}

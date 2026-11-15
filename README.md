@@ -30,6 +30,7 @@ Plan, acceptance results and deviations: [docs/plan.md](docs/plan.md). Product s
 - Shop app `/shop`: shop code `S-101`, `S-102` or `S-201`, password `transend-shop`.
 - Redeem: on the shop, Pay out, then card ID, line number, the 12-character code from the printed card, and an amount up to the limit. Hand over the phone; the recipient enters her PIN (demo card: `1234`).
 - Judges' page `/proof`: contract ID, the last 20 contract events with stellar.expert links, and the Savings state. No log-in.
+- Operations view `/ops`: a satellite map of the cash network with the AI forecast for every shop, cash ceilings, each shopkeeper's own top-ups (no cash deliveries), and a 7-day playback. No log-in. The 3 real shops plus 23 simulated shops in real towns (labelled), all on sample data.
 - Admin `/admin/cards`, `/admin/areas`, `/admin/cash`, `/admin/savings`: protected by `ADMIN_PASSWORD`.
 
 Card codes exist only in the printed card (the PDF downloaded once when the card is made); the server keeps only their hashes.
@@ -44,7 +45,7 @@ npm run seed:demo               # shops, Jean, card TS4F2K9Q, sample payouts; co
 cd web && npm run dev           # http://localhost:3000
 ```
 
-Tests: `cargo test -p transend_escrow` (contract) and `cd web && npm test` (cards, Savings rules, forecast). Forecast model: `npm run ml:setup && npm run ml:export && npm run ml:train`.
+Tests: `cargo test -p transend_escrow` (contract) and `cd web && npm test` (cards, Savings rules, forecast). Forecast model: `npm run ml:setup && npm run ml:export && npm run ml:train` (trains on the 3 real and 23 simulated shops; held-out p10-p90 coverage 80%).
 
 ## Deploy (Vercel)
 
