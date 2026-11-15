@@ -38,7 +38,8 @@ export default function AdminCardsPage() {
       }
     >
       <p>
-        Makes a batch of real demo cards on testnet and downloads one print-ready PDF. The codes exist only in that PDF:
+        Makes a batch of real demo cards on testnet and downloads one print-ready PDF: one Letter sheet per card, front
+        and back side by side. Cut on the corner marks and fold on the middle marks. The codes exist only in that PDF:
         we keep no copy, so print it or save it now. The contract allows 3 cards per sender, so the cards are spread over
         demo senders print-1@transend.demo, print-2@... (demo password). Log in as them to approve activation.
       </p>
