@@ -26,10 +26,6 @@ export const ERRORS = {
   15: "TooManySenders",
   16: "BadInput",
   17: "NotAuthorized",
-  18: "StakingPaused",
-  19: "BelowMinStake",
-  20: "OverStakeLimit",
-  21: "InsufficientLiquid",
 } as const;
 export type EscrowErrorName = (typeof ERRORS)[keyof typeof ERRORS];
 
@@ -47,10 +43,6 @@ export type ChainCard = {
   sender: string;
   status: "Pending" | "Active" | "Frozen" | "Retired";
   balanceUsd: number;
-  stakedUsd: number;
-  liquidUsd: number;
-  yieldCreditedUsd: number;
-  stakeUpdated: number; // unix seconds
   linesUsed: number;
   usedLines: number[]; // 1-based lines already spent
   withdrawalsToday: number;
@@ -62,9 +54,6 @@ type RawCard = {
   sender: string;
   status: string[] | string;
   balance: bigint;
-  staked: bigint;
-  yield_credited: bigint;
-  stake_updated: bigint;
   used: number;
   withdrawals_today: number;
   loaded_today: bigint;
@@ -75,16 +64,10 @@ function toCard(raw: RawCard): ChainCard {
   const status = (Array.isArray(raw.status) ? raw.status[0] : raw.status) as ChainCard["status"];
   const used: number[] = [];
   for (let i = 0; i < 20; i++) if (raw.used & (1 << i)) used.push(i + 1);
-  const balance = BigInt(raw.balance);
-  const staked = BigInt(raw.staked);
   return {
     sender: raw.sender,
     status,
-    balanceUsd: fromUnits(balance),
-    stakedUsd: fromUnits(staked),
-    liquidUsd: fromUnits(balance - staked),
-    yieldCreditedUsd: fromUnits(BigInt(raw.yield_credited)),
-    stakeUpdated: Number(raw.stake_updated),
+    balanceUsd: fromUnits(BigInt(raw.balance)),
     linesUsed: used.length,
     usedLines: used,
     withdrawalsToday: raw.withdrawals_today,
@@ -104,41 +87,8 @@ export async function getCard(cardId: string): Promise<ChainCard | null> {
   }
 }
 
-export async function liquidBalanceUsd(cardId: string): Promise<number> {
-  return fromUnits(BigInt((await read("liquid_balance", [sym(cardId)])) as bigint));
-}
-
-export type ChainSavings = {
-  apyBps: number;
-  minStakeUsd: number;
-  minLiquidUsd: number;
-  maxStakedTotalUsd: number;
-  stakedTotalUsd: number;
-  yieldReserveUsd: number;
-  speedup: number;
-  stakingPaused: boolean;
-};
-
-export async function getSavings(): Promise<ChainSavings> {
-  const r = (await read("savings", [])) as Record<string, bigint | number | boolean | string>;
-  return {
-    apyBps: Number(r.apy_bps),
-    minStakeUsd: fromUnits(BigInt(r.min_stake as bigint)),
-    minLiquidUsd: fromUnits(BigInt(r.min_liquid as bigint)),
-    maxStakedTotalUsd: fromUnits(BigInt(r.max_staked_total as bigint)),
-    stakedTotalUsd: fromUnits(BigInt(r.staked_total as bigint)),
-    yieldReserveUsd: fromUnits(BigInt(r.yield_reserve as bigint)),
-    speedup: Number(r.speedup),
-    stakingPaused: Boolean(r.staking_paused),
-  };
-}
-
-/** Yield earned since the last accrual, estimated with the contract's own formula. */
-export function pendingYieldUsd(card: ChainCard, s: ChainSavings, nowSec = Date.now() / 1000): number {
-  if (card.stakedUsd <= 0) return 0;
-  const elapsed = Math.max(0, nowSec - card.stakeUpdated);
-  const y = ((card.stakedUsd * s.apyBps) / 10_000) * ((elapsed * s.speedup) / 31_536_000);
-  return Math.min(y, s.yieldReserveUsd);
+export async function balanceUsd(cardId: string): Promise<number> {
+  return fromUnits(BigInt((await read("balance", [sym(cardId)])) as bigint));
 }
 
 // ---- sender-signed ----
@@ -161,12 +111,6 @@ export const freezeBySender = (sender: Keypair, cardId: string) =>
 
 export const unfreeze = (sender: Keypair, cardId: string) => invoke(sender, "unfreeze", [sym(cardId)]);
 
-export const stake = (sender: Keypair, cardId: string, usd: number) =>
-  invoke(sender, "stake", [sym(cardId), i128(toUnits(usd))]);
-
-export const unstake = (sender: Keypair, cardId: string, usd: number) =>
-  invoke(sender, "unstake", [sym(cardId), i128(toUnits(usd))]);
-
 // ---- verifier-signed ----
 
 /** `line` is the printed line, 1 to 20; the contract counts from 0. */
@@ -181,14 +125,3 @@ export const redeem = (cardId: string, line: number, code: string, usd: number, 
 
 export const freezeByVerifier = (cardId: string) =>
   invoke(verifier(), "freeze", [sym(cardId), addr(verifier().publicKey())]);
-
-/** Credits pending yield. Anyone may call it; the verifier signs so nobody needs XLM. */
-export const accrue = (cardId: string) => invoke(verifier(), "accrue", [sym(cardId)]);
-
-// ---- admin ----
-
-export const setApy = (bps: number) => invoke(admin(), "set_apy", [u32(bps)]);
-export const fundYieldReserve = (usd: number) => invoke(admin(), "fund_yield_reserve", [i128(toUnits(usd))]);
-export const pauseStaking = () => invoke(admin(), "pause_staking", []);
-export const unpauseStaking = () => invoke(admin(), "unpause_staking", []);
-export const setSpeedup = (n: number) => invoke(admin(), "set_speedup", [u32(n)]);

@@ -9,7 +9,17 @@ export type ForecastModel = {
   version: string;
   features: string[];
   trainedOn: string;
-  metrics: { baselineMae: number; modelMae: number; improvementPct: number; holdoutDays: number; chosen: boolean };
+  metrics: {
+    baselineMae: number;
+    modelMae: number;
+    improvementPct: number;
+    holdoutDays: number;
+    chosen: boolean;
+    p10p90Coverage?: number;
+    p10p90CoverageRaw?: number;
+  };
+  /** Band widening around p50, picked on a calibration window so p10-p90 covers 80%. */
+  calibration?: { bandScale: number; calibDays: number; target: number };
   quantiles: { p10: QuantileModel; p50: QuantileModel; p90: QuantileModel };
 };
 

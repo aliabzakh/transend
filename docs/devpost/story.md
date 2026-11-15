@@ -1,6 +1,6 @@
 ![Transend: cash home, hand to hand](https://raw.githubusercontent.com/aliabzakh/transend/e7ab19223f32afbbc2b3ccdf89f1c91af712a4a0/docs/devpost/01-hero.png)
 
-**Try it:** [transend.vercel.app](https://transend.vercel.app) · judges' page with live contract events: [/proof](https://transend.vercel.app/proof) · contract [`CA5VT3QZ…CODBMIT`](https://stellar.expert/explorer/testnet/contract/CA5VT3QZNJXHWKRWTODIQUANZG2LERIPZNPYXNQWKKL3NTTMHCODBMIT) on Stellar testnet. Sender log-in `jean@transend.demo` / `transend-demo`; shop `S-101` / `transend-shop`; demo card PIN `1234`.
+**Try it:** [transend.vercel.app](https://transend.vercel.app) · judges' page with live contract events: [/proof](https://transend.vercel.app/proof) · contract [`CCNJKUOE…ZFJS5DO`](https://stellar.expert/explorer/testnet/contract/CCNJKUOENNFTJO7MUJS6FXDD74KHURJMO5S3JMVPVX3GOWDZ4ZFJS5DO) on Stellar testnet. Sender log-in `jean@transend.demo` / `transend-demo`; shop `S-101` / `transend-shop`; demo card PIN `1234`.
 
 ## Inspiration
 
@@ -36,12 +36,6 @@ A small shop can't hold much cash, and in Haiti a full till is a target. A gradi
 
 ![AI cash forecast](https://raw.githubusercontent.com/aliabzakh/transend/e7ab19223f32afbbc2b3ccdf89f1c91af712a4a0/docs/devpost/16-forecast.png)
 
-### Savings
-
-A sender can set part of a card's balance aside. It earns yield, all of which goes to the family, and no shop can pay it out until the sender moves it back, so a lost card never reaches it. On testnet the yield comes from a funded reserve at a 4% rate labelled as a demo rate.
-
-![Activation and Savings](https://raw.githubusercontent.com/aliabzakh/transend/e7ab19223f32afbbc2b3ccdf89f1c91af712a4a0/docs/devpost/17-grow.png)
-
 ## The money
 
 **Why it's cheaper.** Cash pickup is expensive because of everything behind the counter: agent networks, armoured cash delivery and float. Transend pays for none of that. Shops pay out from cash they already take in from sales and are paid back digitally, so no cash is trucked anywhere. Moving the money on Stellar costs about six cents per top-up, and our sponsor account pays it, so nobody in the flow holds XLM.
@@ -70,7 +64,7 @@ A sender can set part of a card's balance aside. It earns yield, all of which go
 
 ![Architecture](https://raw.githubusercontent.com/aliabzakh/transend/e7ab19223f32afbbc2b3ccdf89f1c91af712a4a0/docs/devpost/10-architecture.png)
 
-- **Soroban escrow, in Rust.** One contract holds every card's USDC. Each card stores 20 code hashes, `sha256(card ID ‖ line ‖ code)`, and a bitmask of used lines, so a line works exactly once and a dropped connection can retry without paying twice. A redeem needs the verifier's signature and stays inside hard caps: US$100 per withdrawal, two a day, US$635 per card. Savings adds stake, unstake and yield accrual against a funded reserve. The contract has 37 unit tests and is deployed to testnet.
+- **Soroban escrow, in Rust.** One contract holds every card's USDC. Each card stores 20 code hashes, `sha256(card ID ‖ line ‖ code)`, and a bitmask of used lines, so a line works exactly once and a dropped connection can retry without paying twice. A redeem needs the verifier's signature and stays inside hard caps: US$100 per withdrawal, two a day, US$635 per card. The contract has 27 unit tests and is deployed to testnet.
 - **Verification service.** Next.js route handlers on Vercel check the PIN (argon2id with a per-card salt and a server pepper; it never goes on-chain), the area's status (calm, tense or closed, set by the shopkeeper with one tap) and the shop's cash ceiling. The service then simulates the redeem, signs as verifier, fee-bumps it with the sponsor key and submits it.
 - **Fee sponsorship.** Every transaction is fee-bumped, so sender and shop accounts hold 0 XLM.
 - **Quotes and cards.** Quotes are firm for 30 seconds and follow SEP-38's shape. The card PDF (pdf-lib and qrcode) is made once, and the server keeps only hashes of the codes.

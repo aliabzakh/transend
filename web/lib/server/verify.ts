@@ -85,7 +85,6 @@ const CONTRACT_TO_REASON: Partial<Record<escrow.EscrowErrorName, DeclineReason>>
   OverWithdrawalLimit: "over_limit",
   TooManyWithdrawals: "daily_count",
   InsufficientBalance: "not_enough",
-  InsufficientLiquid: "not_enough",
   Frozen: "unavailable",
   NotActive: "unavailable",
   Paused: "unavailable",
@@ -148,12 +147,12 @@ export async function redeemForShop(shop: Shop, input: RedeemInput) {
   return { payUsd: amount, cardId: card.id, line, at: at.toISOString(), txHash: res.hash };
 }
 
-/** Card ID + PIN at any shop: shows only what she can collect now ("Available now"). */
+/** Card ID + PIN at any shop: shows what she can collect now ("Available now"). */
 export async function balanceForShop(cardId: string, pin: unknown) {
   const card = await loadCard(cardId);
   await checkPin(card, pin);
   try {
-    return { availableUsd: await escrow.liquidBalanceUsd(card.id) };
+    return { availableUsd: await escrow.balanceUsd(card.id) };
   } catch (e) {
     if (e instanceof ChainError) throw new Declined("no_signal");
     throw e;
