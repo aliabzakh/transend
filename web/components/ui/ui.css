@@ -26,10 +26,10 @@ p {
   margin: 0;
 }
 a {
-  color: var(--color-fg);
+  color: var(--color-primary);
 }
 :focus-visible {
-  outline: var(--focus-width) solid var(--color-fg);
+  outline: var(--focus-width) solid var(--color-accent);
   outline-offset: var(--focus-offset);
 }
 
@@ -48,10 +48,19 @@ a {
 .brand {
   font-weight: var(--weight-bold);
   font-size: var(--text-lg);
+  color: var(--color-fg);
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   min-height: var(--tap);
+}
+.hero-logo {
+  display: flex;
+  justify-content: center;
+}
+.hero-logo .logo-mark {
+  width: var(--logo-hero);
+  height: var(--logo-hero);
 }
 
 /* Logo: Held mark plus wordmark */
@@ -80,8 +89,12 @@ a {
   align-items: center;
   gap: var(--space-2);
   min-height: var(--tap);
+  color: var(--color-fg);
   text-decoration: none;
   font-size: var(--text-base);
+}
+.nav-link:hover {
+  color: var(--color-primary);
 }
 .nav-row {
   display: flex;
@@ -134,7 +147,11 @@ a {
   gap: var(--space-2);
   min-height: var(--tap);
   align-self: flex-start;
+  color: var(--color-muted);
   text-decoration: none;
+}
+.back:hover {
+  color: var(--color-fg);
 }
 .app-footer {
   width: 100%;
@@ -191,7 +208,7 @@ a {
   min-height: var(--tap);
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius);
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-primary);
   font: inherit;
   font-weight: var(--weight-bold);
   text-decoration: none;
@@ -199,12 +216,16 @@ a {
   width: 100%;
 }
 .btn-primary {
-  background: var(--color-fg);
-  color: var(--color-bg);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 .btn-secondary {
-  background: var(--color-bg);
+  background: transparent;
+  border-color: var(--color-line);
   color: var(--color-fg);
+}
+.btn-secondary:hover {
+  border-color: var(--color-primary);
 }
 .btn[disabled],
 .btn[aria-disabled="true"] {
@@ -237,11 +258,17 @@ a {
   min-height: var(--tap);
   width: 100%;
   padding: var(--space-2) var(--space-3);
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-line);
   border-radius: var(--radius);
-  background: var(--color-bg);
+  background: var(--color-surface);
   color: var(--color-fg);
   font: inherit;
+}
+.input:focus {
+  border-color: var(--color-primary);
+}
+.input::placeholder {
+  color: var(--color-muted);
 }
 .input-mono {
   font-family: var(--font-mono);
@@ -300,8 +327,12 @@ a {
   flex-direction: column;
   gap: var(--space-2);
   padding: var(--space-4);
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-accent);
   border-radius: var(--radius);
+  background: var(--color-surface);
+}
+.notice .status {
+  color: var(--color-accent);
 }
 .panel {
   display: flex;
@@ -332,7 +363,12 @@ a {
   padding: var(--space-4);
   border: var(--border) solid var(--color-line);
   border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-fg);
   text-decoration: none;
+}
+.link-card:hover {
+  border-color: var(--color-primary);
 }
 .segmented {
   display: grid;
@@ -347,16 +383,21 @@ a {
   min-height: var(--tap);
   padding: var(--space-2);
   border-radius: var(--radius);
-  border: var(--border) solid var(--color-fg);
-  background: var(--color-bg);
+  border: var(--border) solid var(--color-line);
+  background: var(--color-surface);
   color: var(--color-fg);
   font: inherit;
   cursor: pointer;
 }
 .seg[aria-pressed="true"] {
-  background: var(--color-fg);
-  color: var(--color-bg);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
   font-weight: var(--weight-bold);
+}
+.seg:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
 }
 .table {
   width: 100%;
@@ -396,10 +437,11 @@ a {
   width: var(--space-4);
   height: var(--space-4);
   border-radius: 50%;
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-muted);
 }
 .pin-dot[data-on="true"] {
-  background: var(--color-fg);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 .pin-grid {
   display: grid;
@@ -422,6 +464,9 @@ a {
   justify-content: center;
   gap: var(--space-1);
 }
+.pin-key:active {
+  border-color: var(--color-primary);
+}
 .pin-key-small {
   font-size: var(--text-sm);
   font-weight: var(--weight-normal);
@@ -434,19 +479,24 @@ a {
   gap: var(--space-3);
 }
 
-/* Print card (one colour, black on white) */
+/* Print card: cream paper on screen, black on white when printed */
 .card-face {
   width: var(--card-width);
+  max-width: 100%;
   min-height: var(--card-height);
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-card-ink);
   border-radius: var(--radius);
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  background: var(--color-bg);
-  color: var(--color-fg);
+  background: var(--color-card-paper);
+  color: var(--color-card-ink);
   break-inside: avoid;
+}
+.card-face .muted {
+  color: inherit;
+  opacity: 0.75;
 }
 .card-top {
   display: flex;
@@ -472,7 +522,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  border: var(--border) solid var(--color-fg);
+  border: var(--border) solid var(--color-card-ink);
   border-radius: var(--radius);
   padding: var(--space-1) var(--space-2);
 }

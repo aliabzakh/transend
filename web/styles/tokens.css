@@ -4,12 +4,24 @@
  * A later design addendum restyles the whole product by editing only this file.
  */
 :root {
-  /* Colour */
-  --color-bg: #ffffff; /* Page background */
-  --color-fg: #000000; /* Text, primary buttons, icons */
-  --color-muted: #595959; /* Secondary text (7:1 on white) */
-  --color-line: #d9d9d9; /* Borders and dividers */
-  --color-surface: #f5f5f5; /* Cards, keypad keys */
+  /* Brand palette */
+  --brand-green: #30cb7a; /* Primary actions, logo arms */
+  --brand-gold: #e0a526; /* Attention: pending, alerts, focus; logo coin */
+  --brand-ink: #0c1a12; /* Deep green-black: page background */
+  --brand-panel: #13291e; /* Cards, panels, inputs, keypad keys */
+  --brand-cream: #fff7e9; /* Text on dark; card paper on screen */
+
+  /* Colour roles (contrast on --color-bg in brackets) */
+  --color-bg: var(--brand-ink); /* Page background */
+  --color-fg: var(--brand-cream); /* Text and icons (17:1) */
+  --color-muted: #a9b8ad; /* Secondary text (8.6:1; 7.4:1 on panels) */
+  --color-line: #2a4535; /* Borders and dividers */
+  --color-surface: var(--brand-panel); /* Cards, inputs, keypad keys */
+  --color-primary: var(--brand-green); /* Main button (8.5:1 with --color-on-primary) */
+  --color-on-primary: var(--brand-ink); /* Text on the main button */
+  --color-accent: var(--brand-gold); /* Attention (8.2:1) */
+  --color-card-paper: var(--brand-cream); /* On-screen card preview */
+  --color-card-ink: var(--brand-ink);
 
   /* Type */
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -35,7 +47,7 @@
   --space-8: 64px;
 
   /* Shape and sizing */
-  --radius: 8px; /* Buttons, inputs, cards */
+  --radius: 12px; /* Buttons, inputs, cards */
   --tap: 48px; /* Minimum height of any control */
   --border: 1px;
   --focus-width: 2px;
@@ -44,13 +56,35 @@
   --measure: 480px; /* Widest a screen column gets */
   --code-spacing: 0.08em;
 
-  /* Logo (Held mark, docs/brand). Forest arms suit this light ground; the Draft A restyle sets them to Leaf #2FCB7A on Night */
-  --logo-arms: #0f5132;
-  --logo-coin: #e0a526;
+  /* Logo (Held mark, docs/brand): green arms and gold coin on the dark ground */
+  --logo-arms: var(--brand-green);
+  --logo-coin: var(--brand-gold);
   --logo-size: 24px; /* Mark height in the app header */
+  --logo-hero: 72px; /* Mark on the home page */
   --wordmark-spacing: -0.02em;
 
   /* Print card (folded size) */
   --card-width: 105mm;
   --card-height: 74mm;
+
+  color-scheme: dark;
+}
+
+/* Paper is white and ink is black: cheap to print, and dark backgrounds never waste toner. */
+@media print {
+  :root {
+    --color-bg: #ffffff;
+    --color-fg: #000000;
+    --color-muted: #000000;
+    --color-line: #000000;
+    --color-surface: #ffffff;
+    --color-primary: #000000;
+    --color-on-primary: #ffffff;
+    --color-accent: #000000;
+    --color-card-paper: #ffffff;
+    --color-card-ink: #000000;
+    --logo-arms: #000000;
+    --logo-coin: #000000;
+    color-scheme: light;
+  }
 }
