@@ -13,11 +13,6 @@ export const CONFIG = {
   shopCashCeilingCad: 500,
   quoteSeconds: 30,
   linesPerCard: 20,
-  // Savings ("Grow"): demo rate, labelled "demo rate, not guaranteed" on every Grow screen.
-  demoApyBps: 400,
-  minStakeUsd: 10,
-  minLiquidUsd: 100,
-  maxStakedTotalUsd: 5000,
   // Shop cash ceiling bounds for the forecast (C$).
   ceilingFloorCad: 150,
   ceilingHardCapCad: 1000,

@@ -13,7 +13,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin/cards" className="nav-link">Cards</Link>
           <Link href="/admin/areas" className="nav-link">Areas</Link>
           <Link href="/admin/cash" className="nav-link">Cash</Link>
-          <Link href="/admin/savings" className="nav-link">Savings</Link>
           <Link href="/ops" className="nav-link">Operations map</Link>
         </nav>
       </header>

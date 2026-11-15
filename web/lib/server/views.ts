@@ -2,19 +2,14 @@
 import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import * as escrow from "../stellar/escrow";
-import { savingsSplit } from "../savings/rules";
 import { sentTotals } from "./transfers";
 
 type User = typeof schema.users.$inferSelect;
-const cents = (n: number) => Math.round(n * 100) / 100;
 
 export type SenderCard = {
   id: string;
   status: "Pending" | "Active" | "Frozen" | "Retired";
   availableUsd: number;
-  setAsideUsd: number;
-  earnedUsd: number;
-  totalUsd: number;
   linesUsed: number;
   activationRequested: boolean;
   activationShop: string | null;
@@ -37,7 +32,6 @@ export type SenderView = {
   activity: InboxItem[];
   sentTodayCad: number;
   sentMonthCad: number;
-  savings: { apyBps: number; speedup: number };
 };
 
 export async function inbox(user: User, limit = 50): Promise<InboxItem[]> {
@@ -58,10 +52,9 @@ export async function inbox(user: User, limit = 50): Promise<InboxItem[]> {
 }
 
 export async function senderView(user: User): Promise<SenderView> {
-  const [recipients, cards, cfg, totals, activity] = await Promise.all([
+  const [recipients, cards, totals, activity] = await Promise.all([
     db.select().from(schema.recipients).where(eq(schema.recipients.senderId, user.id)).orderBy(schema.recipients.createdAt),
     db.select().from(schema.cards).where(eq(schema.cards.senderId, user.id)),
-    escrow.getSavings(),
     sentTotals(user.id),
     inbox(user, 20),
   ]);
@@ -76,13 +69,11 @@ export async function senderView(user: User): Promise<SenderView> {
     if (i < 0) return null;
     const row = live[i];
     const c = chain[i];
-    const split = c ? savingsSplit(c) : { availableUsd: 0, setAsideUsd: 0, totalUsd: 0 };
     return {
       id: row.id,
       // The chain is the source of truth for status when it can be read.
       status: c?.status ?? row.status,
-      ...split,
-      earnedUsd: c ? cents(c.yieldCreditedUsd + escrow.pendingYieldUsd(c, cfg)) : 0,
+      availableUsd: c?.balanceUsd ?? 0,
       linesUsed: c?.linesUsed ?? 0,
       activationRequested: row.status === "Pending" && !!row.activationRequestedAt,
       activationShop: row.activationShopId ? (shopNames.get(row.activationShopId) ?? null) : null,
@@ -105,6 +96,5 @@ export async function senderView(user: User): Promise<SenderView> {
     activity,
     sentTodayCad: totals.dayCad,
     sentMonthCad: totals.monthCad,
-    savings: { apyBps: cfg.apyBps, speedup: cfg.speedup },
   };
 }
