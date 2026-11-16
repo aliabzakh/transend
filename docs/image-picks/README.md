@@ -18,6 +18,7 @@ Then go to http://localhost:8790.
 | `4-trifold-pieces` | Every trifold print piece at 300 dpi and actual size |
 | `5-print` | Letter and tabloid PDFs of the pieces; print at Actual size |
 | `source/trifold` | Rebuilds the pieces, board and PDFs (`build.py`, `compose.py`, `pack.py`) |
+| `source/trifold-ops` | Builds `4-trifold-pieces/27-ops-map.png`, the operations map with four call-outs (`capture-map.mjs` needs the dev server; then `build.mjs`) |
 | `source/devpost-clean` | Rebuilds `2-devpost-clean` from `1-devpost-original` (`clean.py`) |
 | `source/devpost-v2` | Builds `docs/devpost/images`, the images the Devpost story now uses: Held mark with sources kept, real app screens, the operations map and the admin forecast view |
 

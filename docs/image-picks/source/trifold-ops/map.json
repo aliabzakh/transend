@@ -1,0 +1,38 @@
+{
+ "clock": "Mon 16 Nov13:30",
+ "topups": 2,
+ "tiles": {
+  "Cash in shops": {
+   "value": "US$3,754",
+   "sub": "of US$5,397 in ceilings"
+  },
+  "Paid out this week": {
+   "value": "US$2,503",
+   "sub": "of US$31.2k simulated demand"
+  },
+  "Shop top-ups": {
+   "value": "26 / 364",
+   "sub": "2 topping up now"
+  },
+  "Shops low on cash": {
+   "value": "0",
+   "sub": "of 26 shops"
+  },
+  "Expected payouts": {
+   "value": "US$31.2k",
+   "sub": "US$25.5k – US$37.5k (p10–p90)"
+  },
+  "Payouts served": {
+   "value": "99.9%",
+   "sub": "Flat C$500 ceiling: 99.9%"
+  },
+  "Average cash held": {
+   "value": "US$5,002",
+   "sub": "−37% vs flat C$500 (US$7,890)"
+  },
+  "Payouts redirected": {
+   "value": "US$46",
+   "sub": "4 shop-days sent to the next shop"
+  }
+ }
+}
