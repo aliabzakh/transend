@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ExternalLink, Network } from "lucide-react";
 import { Screen } from "@/components/ui/Screen";
 import { Logo } from "@/components/ui/Logo";
@@ -16,7 +17,9 @@ export default async function ProofPage() {
   return (
     <div className="app-root">
       <header className="app-header app-header-wide">
-        <Logo />
+        <Link href="/" className="brand">
+          <Logo />
+        </Link>
         <span className="pill">
           <Network className="icon" aria-hidden />
           Stellar testnet

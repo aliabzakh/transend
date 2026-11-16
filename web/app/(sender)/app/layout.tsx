@@ -7,7 +7,7 @@ export default function SenderLayout({ children }: { children: React.ReactNode }
   return (
     <div className="app-root">
       <header className="app-header">
-        <Link href="/app" className="brand">
+        <Link href="/" className="brand">
           <Logo wordmark={s.brand} />
         </Link>
         <Link href="/app/inbox" className="nav-link">

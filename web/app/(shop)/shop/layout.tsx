@@ -6,7 +6,7 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="app-root shop-app">
       <header className="app-header">
-        <Link href="/shop" className="brand">
+        <Link href="/" className="brand">
           <Logo wordmark={s.brand} />
         </Link>
       </header>

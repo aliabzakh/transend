@@ -183,8 +183,10 @@ export function OpsDashboard({ data }: { data: OpsData }) {
     <div className="ops">
       <header className="ops-head">
         <div className="ops-brand">
-          <Mark />
-          <span className="ops-brand-word">Transend</span>
+          <Link href="/" className="ops-brand-home" aria-label="Transend home">
+            <Mark />
+            <span className="ops-brand-word">Transend</span>
+          </Link>
           <span className="ops-brand-sep" aria-hidden="true" />
           <span className="ops-brand-title">Cash operations · Haiti</span>
         </div>

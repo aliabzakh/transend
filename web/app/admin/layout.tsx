@@ -6,7 +6,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="app-root">
       <header className="app-header app-header-wide">
-        <Link href="/admin/cards" className="brand">
+        <Link href="/" className="brand">
           <Logo wordmark={a.brand} />
         </Link>
         <nav className="nav-row" aria-label="Admin">
