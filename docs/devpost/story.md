@@ -1,4 +1,4 @@
-![Transend: cash home, hand to hand](https://raw.githubusercontent.com/aliabzakh/transend/f971f63684649c49df72fe0684fb0077d94eb36e/docs/devpost/images/01-hero.png)
+![Transend: cash home, hand to hand](https://raw.githubusercontent.com/aliabzakh/transend/a3e4678bb8c3f5b53dafb5ea08dc14738275c083/docs/devpost/images/01-hero.png)
 
 **Try it:** [transend.vercel.app](https://transend.vercel.app)
 - Sender log-in `jean@transend.demo` / `transend-demo`
@@ -23,11 +23,11 @@ Transend sends money from Canada to families in rural Haiti who have no bank acc
 
 **The sender.** Jean, in Montréal, adds his mother and the app makes her a printed card. Before he sends, he sees a firm 30-second quote: C$200 in, a C$1.49 fee, and US$137.39 for her, 2.95% all in. When he confirms, USDC moves into a Soroban escrow under her card.
 
-**The recipient.** Odette, in Môle-Saint-Nicolas, carries the card. It has 20 scratch-off codes that each work once, plus a renewal line. It shows no balance, and she needs no phone, app or ID number to use it.
+**The recipient.** Odette, in Môle-Saint-Nicolas, carries the card. It is an A6 card in Kreyòl, French and English: picture steps on the front, and on the back her card ID and QR, 20 scratch-off codes that each work once, a renewal code and the limits. It shows no balance, and she needs no phone, app or ID number to use it.
 
 **The shopkeeper.** She types the code and the amount, then hands the phone over. Odette sees "Pay out US$40" and enters a PIN she chose herself on a scrambled keypad. The contract pays the shop in USDC in about five seconds, Odette gets her cash, and the shop is paid back the same day into its MonCash account. Jean gets "Odette has the money", and Odette can send back a preset reply.
 
-![The printed card](https://raw.githubusercontent.com/aliabzakh/transend/f971f63684649c49df72fe0684fb0077d94eb36e/docs/devpost/images/15-card.png)
+![The printed card](https://raw.githubusercontent.com/aliabzakh/transend/a3e4678bb8c3f5b53dafb5ea08dc14738275c083/docs/devpost/images/15-card.png)
 
 ![Sender app](https://raw.githubusercontent.com/aliabzakh/transend/f971f63684649c49df72fe0684fb0077d94eb36e/docs/devpost/images/13-sender.png)
 
