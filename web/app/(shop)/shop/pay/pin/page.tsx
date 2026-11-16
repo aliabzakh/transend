@@ -55,6 +55,7 @@ export default function PayPinPage() {
         </>
       )}
       <p className="helper center">{s.pin.helper}</p>
+      <p className="helper center">{s.pin.demo}</p>
     </Screen>
   );
 }

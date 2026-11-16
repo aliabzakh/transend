@@ -10,6 +10,7 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import { shopLogIn } from "@/lib/client/shop";
 import { ApiError } from "@/lib/client/api";
 import { s } from "@/strings/shop.en";
+import { DEMO_SHOP } from "@/lib/demo";
 
 export default function ShopLoginPage() {
   const router = useRouter();
@@ -42,8 +43,8 @@ export default function ShopLoginPage() {
           <StatusLine icon={XCircle}>{error}</StatusLine>
         </div>
       ) : null}
-      <Input name="code" label={s.login.code} autoComplete="username" autoCapitalize="characters" required />
-      <Input name="password" label={s.login.password} type="password" autoComplete="current-password" required />
+      <Input name="code" label={s.login.code} autoComplete="username" autoCapitalize="characters" defaultValue={DEMO_SHOP.code} required />
+      <Input name="password" label={s.login.password} type="password" autoComplete="current-password" defaultValue={DEMO_SHOP.password} required />
       <p className="helper">{s.login.demo}</p>
     </Screen>
   );

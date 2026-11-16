@@ -78,6 +78,7 @@ export const s = {
     cardLineReady: (line: number) => `Card line ${line} · ready`,
     working: "Checking...",
     helper: "Keys move every time. The PIN never leaves this phone except to check it.",
+    demo: "Demo card TS4F2K9Q: PIN 1234.",
     submit: "Done",
     clear: "Clear",
     back: "Back",

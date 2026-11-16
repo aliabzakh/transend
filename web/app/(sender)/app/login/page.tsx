@@ -10,6 +10,7 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import { logIn, signUp } from "@/lib/client/sender";
 import { ApiError } from "@/lib/client/api";
 import { s } from "@/strings/sender.en";
+import { DEMO_SENDER } from "@/lib/demo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,12 +67,23 @@ export default function LoginPage() {
         </div>
       ) : null}
       {busy && mode === "signup" ? <p className="helper">{s.auth.working}</p> : null}
-      <Input name="email" label={s.auth.email} type="email" autoComplete="email" required />
+      {/* Log-in is filled with the demo account so the demo is one tap; sign-up starts empty. */}
+      <Input
+        key={`email-${mode}`}
+        name="email"
+        label={s.auth.email}
+        type="email"
+        autoComplete="email"
+        defaultValue={mode === "login" ? DEMO_SENDER.email : ""}
+        required
+      />
       <Input
         name="password"
         label={s.auth.password}
         type="password"
+        key={`password-${mode}`}
         autoComplete={mode === "signup" ? "new-password" : "current-password"}
+        defaultValue={mode === "login" ? DEMO_SENDER.password : ""}
         minLength={8}
         required
       />

@@ -11,6 +11,7 @@ import { addRecipient, issueCard } from "@/lib/client/sender";
 import { ApiError } from "@/lib/client/api";
 import { OPEN_DEPARTMENTS } from "@/lib/config";
 import { s } from "@/strings/sender.en";
+import { DEMO_RECIPIENT } from "@/lib/demo";
 
 export default function NewRecipientPage() {
   const router = useRouter();
@@ -71,16 +72,17 @@ export default function NewRecipientPage() {
         </div>
       ) : null}
       {busy ? <p className="helper">{s.recipient.working}</p> : null}
-      <Input name="name" label={s.recipient.name} required disabled={!!savedId} />
+      <Input name="name" label={s.recipient.name} defaultValue={DEMO_RECIPIENT.name} required disabled={!!savedId} />
       <Input
         name="relationship"
         label={s.recipient.relationship}
         hint={s.recipient.relationshipHint}
+        defaultValue={DEMO_RECIPIENT.relationship}
         required
         disabled={!!savedId}
       />
-      <Input name="commune" label={s.recipient.commune} required disabled={!!savedId} />
-      <Select name="department" label={s.recipient.department} hint={s.recipient.departmentHint} disabled={!!savedId}>
+      <Input name="commune" label={s.recipient.commune} defaultValue={DEMO_RECIPIENT.commune} required disabled={!!savedId} />
+      <Select name="department" label={s.recipient.department} hint={s.recipient.departmentHint} defaultValue={DEMO_RECIPIENT.department} disabled={!!savedId}>
         {OPEN_DEPARTMENTS.map((d) => (
           <option key={d} value={d}>
             {d}

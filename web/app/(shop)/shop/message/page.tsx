@@ -10,10 +10,11 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import { getLastCardId, sendReply } from "@/lib/client/shop";
 import { isCardId } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
+import { DEMO_CARD } from "@/lib/demo";
 
 export default function MessagePage() {
-  const [cardId, setCardId] = useState(getLastCardId());
-  const [choice, setChoice] = useState<number | null>(null);
+  const [cardId, setCardId] = useState(getLastCardId() || DEMO_CARD.id);
+  const [choice, setChoice] = useState<number | null>(0);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);

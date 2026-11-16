@@ -10,6 +10,7 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import { verifyIdentity } from "@/lib/client/sender";
 import { ApiError } from "@/lib/client/api";
 import { s } from "@/strings/sender.en";
+import { DEMO_SENDER } from "@/lib/demo";
 
 export default function VerifyPage() {
   const router = useRouter();
@@ -55,8 +56,8 @@ export default function VerifyPage() {
           <StatusLine icon={XCircle}>{error}</StatusLine>
         </div>
       ) : null}
-      <Input name="name" label={s.verify.name} required autoComplete="name" />
-      <Input name="dob" label={s.verify.dob} type="date" required />
+      <Input name="name" label={s.verify.name} required autoComplete="name" defaultValue={DEMO_SENDER.name} />
+      <Input name="dob" label={s.verify.dob} type="date" defaultValue={DEMO_SENDER.dob} required />
       <Input name="id" label={s.verify.id} type="file" accept="image/*" hint={s.verify.idHint} />
     </Screen>
   );

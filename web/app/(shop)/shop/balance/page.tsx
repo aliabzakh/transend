@@ -13,10 +13,11 @@ import { StatusLine } from "@/components/ui/StatusLine";
 import { balance } from "@/lib/client/shop";
 import { isCardId } from "@/lib/cards/format";
 import { s } from "@/strings/shop.en";
+import { DEMO_CARD } from "@/lib/demo";
 
 /** Card ID + PIN shows the card's "Available now" balance. */
 export default function BalancePage() {
-  const [cardId, setCardId] = useState("");
+  const [cardId, setCardId] = useState(DEMO_CARD.id);
   const [step, setStep] = useState<"id" | "pin" | "result">("id");
   const [amount, setAmount] = useState(0);
   const [error, setError] = useState<string | null>(null);
