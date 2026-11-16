@@ -5,6 +5,8 @@
 - 16-forecast gets the retrained model's numbers (US$23 vs US$54, from web/lib/risk/model.json).
 - 13-sender and 14-shop are rebuilt around screenshots of the running app (screens/).
 - 18-ops, 19-ops-shop and 20-admin-cash are new: the operations map and the admin forecast view.
+- 00-thumbnail, 01-hero and 15-card show the card as it is printed: screens/card-*.png come from
+  web/lib/cards/pdf.ts via card.ts (the designers' template, with sample codes).
 - 17-grow is left out: Savings was removed from the product.
 
 usage: python build.py <repo root> <out dir>
@@ -12,7 +14,7 @@ needs: pillow numpy fonttools brotli
 """
 import io, os, sys
 import numpy as np
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from fontTools.ttLib import TTFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -198,17 +200,141 @@ def fix_forecast(img):
     return img
 
 
+def printed_card(side, w, angle=0.0, shadow=0.55):
+    """The printed card (A6, from pdf.ts) at width w, trimmed corners, a soft shadow, rotated."""
+    c = Image.open(os.path.join(SCREENS, f"card-{side}.png")).convert("RGBA")
+    c = rounded(c.resize((w, round(c.height * w / c.width)), Image.LANCZOS), max(6, w // 45))
+    pad = w // 6
+    out = Image.new("RGBA", (c.width + 2 * pad, c.height + 2 * pad), (0, 0, 0, 0))
+    a = Image.new("L", out.size, 0)
+    a.paste(c.getchannel("A").point(lambda v: int(v * shadow)), (pad, pad + w // 40))
+    out.putalpha(a.filter(ImageFilter.GaussianBlur(w / 28)))
+    out = Image.composite(out, Image.new("RGBA", out.size, (0, 0, 0, 0)), out.getchannel("A"))
+    out = Image.merge("RGBA", (*Image.new("RGB", out.size, (0, 0, 0)).split(), out.getchannel("A")))
+    out.alpha_composite(c, (pad, pad))
+    return out.rotate(angle, Image.BICUBIC, expand=True) if angle else out
+
+
+def place(img, layer, cx, cy):
+    """Composite layer centred on (cx, cy), clipped to the image."""
+    big = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    big.paste(layer, (round(cx - layer.width / 2), round(cy - layer.height / 2)), layer)
+    img.alpha_composite(big)
+
+
+def _box(x, r, axis):
+    """Box mean of width 2r+1 along axis, edges clamped."""
+    pad = [(0, 0)] * x.ndim
+    pad[axis] = (r + 1, r)
+    c = np.cumsum(np.pad(x, pad, mode="edge"), axis=axis)
+    n = x.shape[axis]
+    hi = np.take(c, np.arange(2 * r + 1, 2 * r + 1 + n), axis=axis)
+    lo = np.take(c, np.arange(0, n), axis=axis)
+    return (hi - lo) / (2 * r + 1)
+
+
+def _smooth(x, radius):
+    """Float Gaussian-like blur: three box passes each way."""
+    r = max(1, int(radius / 1.7))
+    for _ in range(3):
+        x = _box(_box(x, r, 0), r, 1)
+    return x
+
+
+def erase(img, region=None, lum=45, grow=41, radius=160, poly=None):
+    """Remove the old card (bright pixels in region, or everything inside poly) and refill the hole
+    with the smooth background around it."""
+    a = np.asarray(img.convert("RGB")).astype(np.float32)
+    if poly:
+        # a flat fill in the background colour, feathered, so no seam shows where the old shadow was
+        m = Image.new("L", img.size, 0)
+        ImageDraw.Draw(m).polygon(poly, fill=255)
+        t = np.asarray(m.filter(ImageFilter.GaussianBlur(8)), np.float32)[..., None] / 255
+        a = a * (1 - t) + np.array((10, 25, 18), np.float32) * t
+        return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
+    else:
+        x0, y0, x1, y1 = region
+        m = np.zeros(a.shape[:2], np.uint8)
+        m[y0:y1, x0:x1] = (a[y0:y1, x0:x1].mean(axis=2) > lum) * 255
+        hole = np.asarray(Image.fromarray(m).filter(ImageFilter.MaxFilter(grow))) > 0
+    keep = (~hole).astype(np.float32)
+    blur = lambda x: _smooth(x, radius)
+    w = blur(keep)
+    fill = np.stack([blur(a[..., i] * keep) for i in range(3)], 2) / np.maximum(w, 1e-4)[..., None]
+    a[hole] = fill[hole]
+    out = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)).convert("RGBA")
+    return out
+
+
+def card_thumbnail(img):
+    # the old card and its shadow: everything right of a line just left of its slanted edge
+    img = erase(img, poly=[(630, 0), (1500, 0), (1500, 1000), (760, 1000)])
+    place(img, printed_card("back", 980, 10), 1335, 740)
+    return img
+
+
+def card_hero(img):
+    phone_box, r = (1481, 76, 1947, 1074), 70
+    mask = Image.new("L", img.size, 0)
+    ImageDraw.Draw(mask).rounded_rectangle(phone_box, r, fill=255)
+    phone_px = img.copy()
+    img = erase(img, (1100, 540, 1480, 1120), radius=140)
+    place(img, printed_card("back", 560, 8), 1450, 990)
+    sh = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    ImageDraw.Draw(sh).rounded_rectangle((phone_box[0] - 4, phone_box[1] + 18, phone_box[2], phone_box[3] + 18), r, fill=(0, 0, 0, 150))
+    img.alpha_composite(sh.filter(ImageFilter.GaussianBlur(22)))
+    img.paste(phone_px, (0, 0), mask)
+    return img
+
+
+def card_image():
+    W = 2000
+    runs = [("Her whole account fits on a card. ", WHITE),
+            ("No phone, no app, no national ID needed, and no balance printed on it.", LEAF)]
+    top = header(ImageDraw.Draw(Image.new("RGB", (W, 600))), "The recipient's side · a printed card", runs, width=1808) + 90
+    cw = 700
+    front, back = printed_card("front", cw), printed_card("back", cw)
+    pad = cw // 6
+    ch = front.height - 2 * pad
+    H = top + ch + 330
+    img = Image.new("RGBA", (W, H), BG + (255,))
+    d = ImageDraw.Draw(img)
+    header(d, "The recipient's side · a printed card", runs, width=1808)
+    gap = 150
+    x0 = (W - 2 * cw - gap) // 2
+    cf = font(500, 33)
+    for i, (layer, cap) in enumerate([(front, "Front · how to use it, in Kreyòl, French and English"),
+                                      (back, "Back · ID and QR, 20 one-time codes, renewal, limits")]):
+        x = x0 + i * (cw + gap)
+        img.alpha_composite(layer, (x - pad, top - pad))
+        cwid = cf.getlength(cap)
+        d.text((x + (cw - cwid) / 2, top + ch + 40), cap, font=cf, fill=CAPTION)
+    footer(img, "A6 card, 105 × 148 mm, printed from the PDF the sender downloads once: two A6 pages, or front "
+           "and back on one Letter sheet to cut and fold. Rendered by the app's own card code with sample codes. "
+           "The server keeps only hashes of the codes.", H - 160, width=1480)
+    held_logo(img, W - 96, H - 76)
+    img.convert("RGB").save(os.path.join(OUT, "15-card.png"), optimize=True)
+    print("15-card", img.size)
+
+
 # ---- 1. originals with the Held mark, sources kept ----
 KEEP = ["00-thumbnail", "01-hero", "02-haiti", "03-cost", "04-size", "05-waterfall", "06-breakeven",
         "07-growth", "08-corridors", "09-market", "10-architecture", "11-money", "12-redeem",
-        "15-card", "16-forecast"]
+        "16-forecast"]
 for n in KEEP:
     img = Image.open(os.path.join(ORIG, n + ".png")).convert("RGBA")
     img = clean.swap_marks(img, n)
     if n == "16-forecast":
         img = fix_forecast(img)
+    if n == "00-thumbnail":
+        img = card_thumbnail(img)
+    if n == "01-hero":
+        img = card_hero(img)
     img.convert("RGB").save(os.path.join(OUT, n + ".png"), optimize=True)
     print(n, img.size)
+
+# ---- 1b. the printed card ----
+card_image()
 
 # ---- 2. phone images from the running app ----
 phones_image(
