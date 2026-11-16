@@ -25,13 +25,14 @@ export function proxy(request: NextRequest) {
       /* fall through to the challenge */
     }
   }
-  // A background fetch by the Next.js router (prefetch or client navigation) gets a plain 401
-  // with no challenge, so the browser never pops its log-in prompt on a page nobody opened.
-  // A real visit to /admin still gets the challenge: the router falls back to a full page load.
+  // Only a real page visit gets the challenge. A background fetch (a Next.js prefetch or
+  // client navigation) gets a plain 401, so the browser never pops its log-in prompt on a page
+  // nobody opened; the router then falls back to a full page load, which is challenged.
+  // Sec-Fetch-Mode is set by the browser; Next.js strips its own rsc/prefetch headers before
+  // this runs, so they cannot be used here. No header (curl, old browsers) counts as a visit.
+  const mode = request.headers.get("sec-fetch-mode");
   const background =
-    request.headers.has("next-router-prefetch") ||
-    request.headers.get("purpose") === "prefetch" ||
-    request.headers.has("rsc");
+    (mode !== null && mode !== "navigate") || request.headers.get("purpose") === "prefetch";
   if (background) return new NextResponse(null, { status: 401 });
   return new NextResponse("Admin password needed.", {
     status: 401,
