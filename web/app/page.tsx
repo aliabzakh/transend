@@ -22,7 +22,7 @@ export default function Home() {
           Proof for judges
         </Button>
         <div className="split">
-          <Button href="/admin/cards" variant="ghost" icon={Landmark}>
+          <Button href="/admin/cards" variant="ghost" icon={Landmark} prefetch={false}>
             Admin
           </Button>
           <Button href="/ops" variant="ghost" icon={Map}>

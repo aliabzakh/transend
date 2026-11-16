@@ -16,7 +16,12 @@ type Common = {
 };
 
 type ButtonProps = Common & ButtonHTMLAttributes<HTMLButtonElement> & { href?: undefined };
-type LinkProps = Common & { href: string; className?: string };
+type LinkProps = Common & {
+  href: string;
+  className?: string;
+  /** false for links to password-protected pages, so a prefetch never triggers the browser's log-in prompt. */
+  prefetch?: boolean;
+};
 
 /** 52 px tall, full width on mobile, label 17 / 700. Presses scale slightly. */
 export function Button(props: ButtonProps | LinkProps) {
@@ -32,7 +37,7 @@ export function Button(props: ButtonProps | LinkProps) {
   );
   if ("href" in props && props.href) {
     return (
-      <Link href={props.href} className={cls}>
+      <Link href={props.href} className={cls} prefetch={props.prefetch === false ? false : undefined}>
         {inner}
       </Link>
     );
